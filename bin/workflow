@@ -67,8 +67,8 @@ _jj_workspace_setup() {
     local repo_root="$(_jj_repo_root)"
 
     # Run project-specific setup script if it exists
-    if [ -f "$repo_root/scripts/hooks/workspace-setup.sh" ]; then
-        bash "$repo_root/scripts/hooks/workspace-setup.sh" "$workspace_path"
+    if [ -f "$repo_root/etc/setup.sh" ]; then
+        bash "$repo_root/etc/setup.sh" "$workspace_path"
     fi
 }
 

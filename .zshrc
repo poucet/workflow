@@ -1,48 +1,34 @@
 # Generic zsh initialization for workflow-based projects
 
-# Keep history and completion dump in home directory
-export HISTFILE="$HOME/.zsh_history"
-export ZSH_COMPDUMP="$HOME/.zcompdump"
-
-# Source user's main zshrc first
-if [ -f "$HOME/.zshrc" ]; then
-    source "$HOME/.zshrc"
-fi
-
 # ============================================================================
 # Project-specific setup
 # ============================================================================
 
-# Determine the repo root
-# If ZDOTDIR is set (VSCode), get repo root from there. Otherwise use pwd.
-if [ -n "$ZDOTDIR" ]; then
-    REPO_ROOT="$ZDOTDIR"
+# Determine the project root (current working directory)
+PROJECT_ROOT="$(pwd)"
+
+# Determine workflow tools directory
+# If this IS the workflow repo, use current directory
+# Otherwise, when sourced from ~/.zshrc, use the directory containing this file
+if [ -f "$PROJECT_ROOT/bin/workflow" ] && [ -f "$PROJECT_ROOT/.zshrc" ]; then
+    WORKFLOW_TOOLS_DIR="$PROJECT_ROOT"
 else
-    REPO_ROOT="$(pwd)"
+    # Get directory containing this .zshrc file
+    WORKFLOW_TOOLS_DIR="${0:A:h}"
 fi
 
-# Find workflow tools directory
-# Look for it as .jj-workflow subdirectory, or if this IS the workflow repo
-WORKFLOW_TOOLS_DIR="${REPO_ROOT}/.jj-workflow"
-if [ ! -d "$WORKFLOW_TOOLS_DIR" ]; then
-    # If this IS the workflow repo, use current directory
-    if [ -f "${REPO_ROOT}/scripts/bin/workflow" ]; then
-        WORKFLOW_TOOLS_DIR="$REPO_ROOT"
-    fi
-fi
-
-# Add both .jj-workflow/scripts/bin and current repo's scripts/bin to PATH
+# Add both workflow tools bin and current project's bin to PATH
 _add_scripts_to_path() {
     local dirs_to_add=()
 
-    # Add workflow tools scripts/bin if it exists
-    if [ -d "$WORKFLOW_TOOLS_DIR/scripts/bin" ]; then
-        dirs_to_add+=("$WORKFLOW_TOOLS_DIR/scripts/bin")
+    # Add workflow tools bin if it exists
+    if [ -d "$WORKFLOW_TOOLS_DIR/bin" ]; then
+        dirs_to_add+=("$WORKFLOW_TOOLS_DIR/bin")
     fi
 
-    # Add current repo's scripts/bin if it exists and is different
-    if [ -d "$REPO_ROOT/scripts/bin" ] && [ "$WORKFLOW_TOOLS_DIR" != "$REPO_ROOT" ]; then
-        dirs_to_add+=("$REPO_ROOT/scripts/bin")
+    # Add current project's bin if it exists and is different
+    if [ -d "$PROJECT_ROOT/bin" ] && [ "$WORKFLOW_TOOLS_DIR" != "$PROJECT_ROOT" ]; then
+        dirs_to_add+=("$PROJECT_ROOT/bin")
     fi
 
     # Add each directory to PATH if not already there
@@ -53,7 +39,7 @@ _add_scripts_to_path() {
     done
 
     if [ ${#dirs_to_add[@]} -gt 0 ]; then
-        echo "✓ Added scripts/bin/ to PATH"
+        echo "✓ Added bin/ to PATH"
     fi
 }
 
@@ -114,13 +100,13 @@ _setup_completions() {
     local dirs_to_scan=()
 
     # Scan workflow tools directory
-    if [ -d "$WORKFLOW_TOOLS_DIR/scripts/bin" ]; then
-        dirs_to_scan+=("$WORKFLOW_TOOLS_DIR/scripts/bin")
+    if [ -d "$WORKFLOW_TOOLS_DIR/bin" ]; then
+        dirs_to_scan+=("$WORKFLOW_TOOLS_DIR/bin")
     fi
 
-    # Scan current repo's directory if different
-    if [ -d "$REPO_ROOT/scripts/bin" ] && [ "$WORKFLOW_TOOLS_DIR" != "$REPO_ROOT" ]; then
-        dirs_to_scan+=("$REPO_ROOT/scripts/bin")
+    # Scan current project's directory if different
+    if [ -d "$PROJECT_ROOT/bin" ] && [ "$WORKFLOW_TOOLS_DIR" != "$PROJECT_ROOT" ]; then
+        dirs_to_scan+=("$PROJECT_ROOT/bin")
     fi
 
     if [ ${#dirs_to_scan[@]} -eq 0 ]; then
