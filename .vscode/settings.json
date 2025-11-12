@@ -1,0 +1,17 @@
+{
+  "files.exclude": {
+    "**/.jj": true
+  },
+  "files.watcherExclude": {
+    "**/.jj/**": true
+  },
+  "search.exclude": {
+    "**/.jj": true
+  },
+  "terminal.integrated.env.osx": {
+    "ZDOTDIR": "${workspaceFolder}"
+  },
+  "terminal.integrated.env.linux": {
+    "ZDOTDIR": "${workspaceFolder}"
+  }
+}

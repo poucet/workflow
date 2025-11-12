@@ -1,0 +1,342 @@
+#!/bin/bash
+# jj workflow tool with subcommands
+# Can be called directly: jj-workflow start my-feature
+# Or via shell functions: jj-start my-feature
+
+# Get the repo root directory
+_jj_repo_root() {
+    jj root 2>/dev/null || git rev-parse --show-toplevel 2>/dev/null || pwd
+}
+
+# Generate a color based on workspace name (using a simple hash)
+_jj_generate_color() {
+    local name="$1"
+    local hash=$(echo -n "$name" | cksum | cut -d' ' -f1)
+    local hue=$((hash % 360))
+
+    # Simple HSL to RGB approximation for common hues
+    case $((hue / 60)) in
+        0) echo "180,80,80" ;;   # Red
+        1) echo "200,150,80" ;;  # Orange/Yellow
+        2) echo "120,180,80" ;;  # Yellow/Green
+        3) echo "80,180,150" ;;  # Green/Cyan
+        4) echo "80,150,200" ;;  # Cyan/Blue
+        5) echo "150,100,200" ;; # Blue/Purple
+        *) echo "180,100,180" ;; # Purple/Red
+    esac
+}
+
+# Create VSCode workspace file with custom colors
+_jj_create_workspace_file() {
+    local branch_name="$1"
+    local repo_root="$(_jj_repo_root)"
+    local workspace_file="$repo_root/.jj-workspaces/$branch_name.code-workspace"
+
+    # Get RGB color for this workspace
+    local color_rgb=$(_jj_generate_color "$branch_name")
+    local color_rgb_light="$(echo $color_rgb | awk -F',' '{printf "%d,%d,%d", int($1*1.3), int($2*1.3), int($3*1.3)}')"
+
+    cat > "$workspace_file" << EOF
+{
+  "folders": [
+    {
+      "path": "$branch_name"
+    }
+  ],
+  "settings": {
+    "workbench.colorCustomizations": {
+      "titleBar.activeBackground": "rgb($color_rgb)",
+      "titleBar.activeForeground": "#ffffff",
+      "titleBar.inactiveBackground": "rgba($color_rgb, 0.6)",
+      "titleBar.inactiveForeground": "#ffffffcc",
+      "statusBar.background": "rgb($color_rgb)",
+      "statusBar.foreground": "#ffffff",
+      "statusBar.noFolderBackground": "rgb($color_rgb)",
+      "activityBar.background": "rgba($color_rgb, 0.3)",
+      "activityBar.foreground": "rgb($color_rgb_light)"
+    },
+  }
+}
+EOF
+    echo "  ✓ Created VSCode workspace file with custom colors"
+}
+
+# Workspace setup hook - calls project-specific setup if available
+_jj_workspace_setup() {
+    local workspace_path="$1"
+    local repo_root="$(_jj_repo_root)"
+
+    # Run project-specific setup script if it exists
+    if [ -f "$repo_root/scripts/hooks/workspace-setup.sh" ]; then
+        bash "$repo_root/scripts/hooks/workspace-setup.sh" "$workspace_path"
+    fi
+}
+
+# ============================================================================
+# Subcommands
+# ============================================================================
+
+workflow_start() {
+    if [ -z "$1" ]; then
+        echo "Usage: jj-start <branch-name>"
+        return 1
+    fi
+
+    local branch_name="$1"
+    local repo_root="$(_jj_repo_root)"
+    local workspace_path="$repo_root/.jj-workspaces/$branch_name"
+
+    echo "Creating workspace '$branch_name'..."
+
+    # Create the workspace
+    jj workspace add "$workspace_path"
+
+    # Run workspace setup (project-specific initialization)
+    _jj_workspace_setup "$workspace_path"
+
+    # Create VSCode workspace file with custom colors
+    _jj_create_workspace_file "$branch_name"
+
+    echo "✓ Workspace '$branch_name' ready"
+
+    # Open in VSCode
+    workflow_open "$branch_name"
+}
+
+workflow_open() {
+    if [ -z "$1" ]; then
+        echo "Usage: jj-open <branch-name>"
+        return 1
+    fi
+
+    local branch_name="$1"
+    local repo_root="$(_jj_repo_root)"
+    local workspace_file="$repo_root/.jj-workspaces/$branch_name.code-workspace"
+    local workspace_path="$repo_root/.jj-workspaces/$branch_name"
+
+    # Prefer workspace file if it exists, otherwise open folder
+    # Use --new-window to prevent inheriting parent shell's working directory
+    if [ -f "$workspace_file" ]; then
+        code --new-window "$workspace_file"
+        echo "✓ Opened workspace '$branch_name' in VSCode"
+    elif [ -d "$workspace_path" ]; then
+        code --new-window "$workspace_path"
+        echo "✓ Opened workspace '$branch_name' in VSCode (no workspace file found)"
+    else
+        echo "Error: Workspace '$branch_name' not found"
+        return 1
+    fi
+}
+
+workflow_merge() {
+    if [ -z "$1" ]; then
+        echo "Usage: jj-merge <branch-name>"
+        return 1
+    fi
+
+    local branch_name="$1"
+    local revision="$branch_name"
+
+    # Check if the bookmark exists, if not try with @ suffix (workspace)
+    if ! jj log -r "$branch_name" --no-graph 2>/dev/null | grep -q .; then
+        if jj log -r "${branch_name}@" --no-graph 2>/dev/null | grep -q .; then
+            echo "Note: Using workspace '${branch_name}@' instead of bookmark '$branch_name'"
+            revision="${branch_name}@"
+        else
+            echo "Error: Neither bookmark '$branch_name' nor workspace '${branch_name}@' exists"
+            return 1
+        fi
+    fi
+
+    # Rebase the branch onto main
+    jj rebase -b "$revision" -d main
+
+    # Move main to point to the branch
+    jj bookmark set main -r "$revision"
+
+    # Update git HEAD to track main branch
+    git symbolic-ref HEAD refs/heads/main
+
+    echo "✓ Merged '$branch_name' into main"
+    echo "  Use 'jj git push' to push to remote"
+}
+
+workflow_sync() {
+    if [ -z "$1" ]; then
+        echo "Usage: jj-sync <branch-name>"
+        return 1
+    fi
+
+    local branch_name="$1"
+
+    # Rebase the branch onto latest main
+    jj rebase -b "$branch_name" -d main
+
+    echo "✓ Synced '$branch_name' with main"
+}
+
+workflow_flatten() {
+    if [ -z "$1" ] || [ -z "$2" ]; then
+        echo "Usage: jj-flatten <branch-name> <commit-message>"
+        echo "Example: jj-flatten my-feature \"Add new authentication system\""
+        return 1
+    fi
+
+    local branch_name="$1"
+    local commit_message="$2"
+
+    # Get the root commit of the branch (where it diverged from main)
+    local base_commit=$(jj log -r "main" --no-graph -T "commit_id" --limit 1)
+
+    # Squash all commits from base to branch tip
+    jj squash --from "($base_commit)::" --to "$branch_name" -m "$commit_message"
+
+    echo "✓ Squashed all commits in '$branch_name'"
+    echo "  New description: $commit_message"
+}
+
+workflow_delete() {
+    if [ -z "$1" ]; then
+        echo "Usage: jj-delete <branch-name>"
+        return 1
+    fi
+
+    local branch_name="$1"
+    local repo_root="$(_jj_repo_root)"
+    local workspace_path="$repo_root/.jj-workspaces/$branch_name"
+    local workspace_file="$repo_root/.jj-workspaces/$branch_name.code-workspace"
+    local workspace="${branch_name}@"
+
+    # Check if workspace exists and has non-empty commits ahead of main
+    if jj log -r "$workspace" --no-graph 2>/dev/null | grep -q .; then
+        # Check if workspace has non-empty commits ahead of main
+        local ahead_count=$(jj log -r "$workspace ~ main" --no-graph -T 'if(!empty, commit_id ++ "\n", "")' 2>/dev/null | grep -c .)
+        if [ "$ahead_count" -gt 0 ]; then
+            echo "Error: Workspace '${workspace}' has $ahead_count non-empty commit(s) ahead of main"
+            echo "Please merge or abandon these commits first"
+            return 1
+        fi
+    fi
+
+    # Remove workspace if it exists
+    if [ -d "$workspace_path" ]; then
+        local workspace_name=$(basename "$workspace_path")
+        jj workspace forget "$workspace_name" 2>/dev/null || true
+        rm -rf "$workspace_path"
+        echo "✓ Deleted workspace at $workspace_path"
+    else
+        echo "Note: Workspace at $workspace_path doesn't exist"
+    fi
+
+    # Remove workspace file if it exists
+    if [ -f "$workspace_file" ]; then
+        rm -f "$workspace_file"
+        echo "✓ Deleted workspace file at $workspace_file"
+    fi
+}
+
+workflow_workspaces() {
+    jj workspace list
+}
+
+workflow_files() {
+    local revision="${1:-@}"
+    jj diff --summary -r "$revision"
+}
+
+workflow_help() {
+    cat <<EOF
+Jujutsu workflow commands:
+
+  workflow start <name>              Create workspace, open in VSCode
+  workflow open <name>               Open existing workspace in VSCode
+  workflow merge <name>              Merge branch into main (clean rebase)
+  workflow sync <name>               Sync branch with latest main
+  workflow flatten <name> "message"  Flatten all commits and set description
+  workflow delete <name>             Delete workspace (if not ahead)
+  workflow workspaces                List all workspaces
+  workflow files [revision]          Show modified files (default: @)
+
+Example workflow:
+  1. workflow start my-feature
+     # Creates workspace and opens in VSCode with unique color
+  2. # ... make changes in the workspace ...
+  3. workflow open my-feature              # reopen if needed
+  4. workflow sync my-feature              # sync with main if needed
+  5. workflow flatten my-feature "Add user authentication with JWT"
+  6. workflow merge my-feature             # merge into main
+  7. jj git push                           # push to GitHub
+
+Multi-workspace workflow (work in parallel):
+  1. workflow start feature1
+  2. workflow start feature2
+  3. # Each opens in separate VSCode window with different colors!
+
+EOF
+}
+
+# ============================================================================
+# Main command dispatcher
+# ============================================================================
+
+# Export list of available commands (for meta-wrapper discovery)
+workflow_commands() {
+    echo "start open merge sync flatten delete workspaces files help"
+}
+
+# ============================================================================
+# Completion Support
+# ============================================================================
+
+# Return completion information for a given function
+# Format: <position>:<type>:<source_command>
+# Types: branches, files, static, freeform
+workflow_complete() {
+    local func_name="$1"
+
+    case "$func_name" in
+        start)
+            # Position 1: freeform (workspace name)
+            echo "1:freeform:workspace name"
+            ;;
+        open|merge|sync|delete)
+            # Position 1: workspaces (list workspace names from .jj-workspaces directory)
+            echo "1:static:ls -1 \$(_jj_repo_root)/.jj-workspaces 2>/dev/null | grep -v '\\.code-workspace$' | sort"
+            ;;
+        flatten)
+            # Position 1: workspaces, Position 2: freeform
+            echo "1:static:ls -1 \$(_jj_repo_root)/.jj-workspaces 2>/dev/null | grep -v '\\.code-workspace$' | sort"
+            echo "2:freeform:commit message"
+            ;;
+        files)
+            # Position 1: freeform (revision)
+            echo "1:freeform:revision (default: @)"
+            ;;
+        workspaces|help)
+            # No completion needed
+            ;;
+    esac
+}
+
+# Main entry point when called directly
+if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+    cmd="${1:-help}"
+    shift || true
+
+    case "$cmd" in
+        commands)
+            workflow_commands
+            ;;
+        complete)
+            workflow_complete "$@"
+            ;;
+        start|open|merge|sync|flatten|delete|workspaces|files|help)
+            "workflow_$cmd" "$@"
+            ;;
+        *)
+            echo "Unknown command: $cmd"
+            echo "Run 'jj-workflow help' for usage"
+            exit 1
+            ;;
+    esac
+fi
