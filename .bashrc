@@ -1,4 +1,4 @@
-# Generic zsh initialization for workflow-based projects
+# Generic bash initialization for workflow-based projects
 
 # ============================================================================
 # Project-specific setup
@@ -9,37 +9,34 @@ PROJECT_ROOT="$(pwd)"
 
 # Determine workflow tools directory
 # If this IS the workflow repo, use current directory
-# Otherwise, when sourced from ~/.zshrc, use the directory containing this file
-if [ -f "$PROJECT_ROOT/bin/workflow" ] && [ -f "$PROJECT_ROOT/.zshrc" ]; then
+# Otherwise, when sourced from ~/.bashrc, use the directory containing this file
+if [ -f "$PROJECT_ROOT/bin/workflow" ] && [ -f "$PROJECT_ROOT/.bashrc" ]; then
     WORKFLOW_TOOLS_DIR="$PROJECT_ROOT"
 else
-    # Get directory containing this .zshrc file
-    WORKFLOW_TOOLS_DIR="${0:A:h}"
+    # Get directory containing this .bashrc file
+    WORKFLOW_TOOLS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
 
-# Setup zsh completion for a tool
+# Setup bash completion for a tool
 _setup_tool_completion() {
     local tool_name="$1"
     local tool_script="$2"
 
-    # Ensure zsh completion system is loaded
-    autoload -U compinit 2>/dev/null
-    compinit -u 2>/dev/null
-
     # Create completion function
     eval "_comp_${tool_name}() {
-        local -a commands
-        local cmd=\"\${words[2]}\"
+        local cur=\${COMP_WORDS[COMP_CWORD]}
+        local prev=\${COMP_WORDS[COMP_CWORD-1]}
+        local cmd=\${COMP_WORDS[1]}
 
         # If we're completing the first argument (the subcommand)
-        if [ \$CURRENT -eq 2 ]; then
-            commands=(\$(\"$tool_script\" commands 2>/dev/null))
-            _describe 'commands' commands
+        if [ \$COMP_CWORD -eq 1 ]; then
+            local commands=\$(\"$tool_script\" commands 2>/dev/null)
+            COMPREPLY=(\$(compgen -W \"\$commands\" -- \"\$cur\"))
             return
         fi
 
         # Otherwise, get completion info for this subcommand
-        local position=\$((CURRENT - 1))
+        local position=\$COMP_CWORD
         local completion_info=\$(\"$tool_script\" complete \"\$cmd\" 2>/dev/null)
         [ -z \"\$completion_info\" ] && return 0
 
@@ -49,24 +46,23 @@ _setup_tool_completion() {
 
             case \"\$comp_type\" in
                 branches|static)
-                    local -a options
-                    options=(\$(eval \"\$comp_source\" 2>/dev/null))
-                    _describe 'options' options
+                    local options=\$(eval \"\$comp_source\" 2>/dev/null)
+                    COMPREPLY=(\$(compgen -W \"\$options\" -- \"\$cur\"))
                     return
                     ;;
                 files)
-                    _files
+                    COMPREPLY=(\$(compgen -f -- \"\$cur\"))
                     return
                     ;;
                 freeform)
-                    _message \"\$comp_source\"
+                    # Just allow any input
                     return
                     ;;
             esac
         done <<< \"\$completion_info\"
     }"
 
-    compdef "_comp_${tool_name}" "$tool_name"
+    complete -F "_comp_${tool_name}" "$tool_name"
 }
 
 # Setup PATH and completions in a single pass
