@@ -151,11 +151,11 @@ workflow_merge() {
     # Rebase the branch onto main
     jj rebase -b "$revision" -d main
 
-    # Move main to point to the branch
-    jj bookmark set main -r "$revision"
+    # Commit the changes
+    jj commit
 
-    # Update git HEAD to track main branch
-    git symbolic-ref HEAD refs/heads/main
+    # Move main bookmark to the parent (the committed change)
+    jj bookmark set main -r @-
 
     echo "✓ Merged '$branch_name' into main"
     echo "  Use 'jj git push' to push to remote"
