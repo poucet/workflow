@@ -25,7 +25,6 @@ _setup_tool_completion() {
     # Create completion function
     eval "_comp_${tool_name}() {
         local cur=\${COMP_WORDS[COMP_CWORD]}
-        local prev=\${COMP_WORDS[COMP_CWORD-1]}
         local cmd=\${COMP_WORDS[1]}
 
         # If we're completing the first argument (the subcommand)
@@ -35,31 +34,16 @@ _setup_tool_completion() {
             return
         fi
 
-        # Otherwise, get completion info for this subcommand
+        # Otherwise, get completions from the script
         local position=\$COMP_CWORD
-        local completion_info=\$(\"$tool_script\" complete \"\$cmd\" 2>/dev/null)
-        [ -z \"\$completion_info\" ] && return 0
+        local options=\$(\"$tool_script\" complete \"\$cmd\" \"\$position\" \"\$cur\" 2>/dev/null)
 
-        # Parse completion info for this position
-        while IFS=: read -r pos comp_type comp_source; do
-            [ \$pos -eq \$position ] || continue
-
-            case \"\$comp_type\" in
-                branches|static)
-                    local options=\$(eval \"\$comp_source\" 2>/dev/null)
-                    COMPREPLY=(\$(compgen -W \"\$options\" -- \"\$cur\"))
-                    return
-                    ;;
-                files)
-                    COMPREPLY=(\$(compgen -f -- \"\$cur\"))
-                    return
-                    ;;
-                freeform)
-                    # Just allow any input
-                    return
-                    ;;
-            esac
-        done <<< \"\$completion_info\"
+        if [ -n \"\$options\" ]; then
+            COMPREPLY=(\$(compgen -W \"\$options\" -- \"\$cur\"))
+        else
+            # Fallback to file completion if no options provided
+            COMPREPLY=(\$(compgen -f -- \"\$cur\"))
+        fi
     }"
 
     complete -F "_comp_${tool_name}" "$tool_name"

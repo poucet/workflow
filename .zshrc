@@ -38,32 +38,21 @@ _setup_tool_completion() {
             return
         fi
 
-        # Otherwise, get completion info for this subcommand
+        # Otherwise, get completions from the script
+        # Position is CURRENT - 1 (to account for tool name at position 1)
         local position=\$((CURRENT - 1))
-        local completion_info=\$(\"$tool_script\" complete \"\$cmd\" 2>/dev/null)
-        [ -z \"\$completion_info\" ] && return 0
+        local current_word=\"\${words[\$CURRENT]}\"
 
-        # Parse completion info for this position
-        while IFS=: read -r pos comp_type comp_source; do
-            [ \$pos -eq \$position ] || continue
+        # Ask script for completions
+        local -a options
+        options=(\$(\"$tool_script\" complete \"\$cmd\" \"\$position\" \"\$current_word\" 2>/dev/null))
 
-            case \"\$comp_type\" in
-                branches|static)
-                    local -a options
-                    options=(\$(eval \"\$comp_source\" 2>/dev/null))
-                    _describe 'options' options
-                    return
-                    ;;
-                files)
-                    _files
-                    return
-                    ;;
-                freeform)
-                    _message \"\$comp_source\"
-                    return
-                    ;;
-            esac
-        done <<< \"\$completion_info\"
+        if [ \${#options[@]} -gt 0 ]; then
+            _describe 'options' options
+        else
+            # Fallback to file completion if no options provided
+            _files
+        fi
     }"
 
     compdef "_comp_${tool_name}" "$tool_name"

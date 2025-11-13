@@ -288,32 +288,36 @@ workflow_commands() {
 # Completion Support
 # ============================================================================
 
-# Return completion information for a given function
-# Format: <position>:<type>:<source_command>
-# Types: branches, files, static, freeform
-workflow_complete() {
-    local func_name="$1"
+# List available workspaces
+_workflow_list_workspaces() {
+    ls -1 "$(_jj_repo_root)/.jj-workspaces" 2>/dev/null | grep -v '\.code-workspace$' | sort
+}
 
-    case "$func_name" in
+# Return completion options for a given subcommand and position
+# Usage: workflow complete <subcommand> <position> <current_word>
+workflow_complete() {
+    local subcommand="$1"
+    local position="$2"
+    local current_word="$3"
+
+    case "$subcommand" in
         start)
-            # Position 1: freeform (workspace name)
-            echo "1:freeform:workspace name"
+            # Position 1: no completion (freeform workspace name)
             ;;
         open|merge|sync|delete)
-            # Position 1: workspaces (list workspace names from .jj-workspaces directory)
-            echo "1:static:ls -1 \$(_jj_repo_root)/.jj-workspaces 2>/dev/null | grep -v '\\.code-workspace$' | sort"
+            # Position 1: list available workspaces
+            [ "$position" -eq 1 ] && _workflow_list_workspaces
             ;;
         flatten)
-            # Position 1: workspaces, Position 2: freeform
-            echo "1:static:ls -1 \$(_jj_repo_root)/.jj-workspaces 2>/dev/null | grep -v '\\.code-workspace$' | sort"
-            echo "2:freeform:commit message"
+            # Position 1: list available workspaces
+            # Position 2: no completion (freeform commit message)
+            [ "$position" -eq 1 ] && _workflow_list_workspaces
             ;;
         files)
-            # Position 1: freeform (revision)
-            echo "1:freeform:revision (default: @)"
+            # Position 1: no completion (freeform revision)
             ;;
-        workspaces|help)
-            # No completion needed
+        *)
+            # No completion for other commands
             ;;
     esac
 }
