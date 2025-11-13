@@ -41,12 +41,16 @@ _jj_create_workspace_file() {
 
     # Get RGB color for this workspace
     local color_rgb=$(_jj_generate_color "$branch_name")
+
+    # Convert RGB to hex format for VSCode
+    local color_hex="$(echo $color_rgb | awk -F',' '{printf "#%02x%02x%02x", $1, $2, $3}')"
+
     # Calculate lighter color, capping at 255
-    local color_rgb_light="$(echo $color_rgb | awk -F',' '{
+    local color_hex_light="$(echo $color_rgb | awk -F',' '{
         r = int($1*1.3); if (r > 255) r = 255;
         g = int($2*1.3); if (g > 255) g = 255;
         b = int($3*1.3); if (b > 255) b = 255;
-        printf "%d,%d,%d", r, g, b
+        printf "#%02x%02x%02x", r, g, b
     }')"
 
     cat > "$workspace_file" << EOF
@@ -58,16 +62,16 @@ _jj_create_workspace_file() {
   ],
   "settings": {
     "workbench.colorCustomizations": {
-      "titleBar.activeBackground": "rgb($color_rgb)",
+      "titleBar.activeBackground": "$color_hex",
       "titleBar.activeForeground": "#ffffff",
-      "titleBar.inactiveBackground": "rgba($color_rgb, 0.6)",
+      "titleBar.inactiveBackground": "${color_hex}99",
       "titleBar.inactiveForeground": "#ffffffcc",
-      "statusBar.background": "rgb($color_rgb)",
+      "statusBar.background": "$color_hex",
       "statusBar.foreground": "#ffffff",
-      "statusBar.noFolderBackground": "rgb($color_rgb)",
-      "activityBar.background": "rgba($color_rgb, 0.3)",
-      "activityBar.foreground": "rgb($color_rgb_light)"
-    },
+      "statusBar.noFolderBackground": "$color_hex",
+      "activityBar.background": "${color_hex}4d",
+      "activityBar.foreground": "$color_hex_light"
+    }
   }
 }
 EOF
@@ -81,8 +85,8 @@ _jj_workspace_setup() {
 
     # Run project-specific setup script if it exists
     if [ -f "$repo_root/etc/setup.sh" ]; then
-        # Execute directly to preserve color output and TTY connection
-        "$repo_root/etc/setup.sh" "$workspace_path"
+        # Execute with bash to ensure proper escape code handling
+        bash "$repo_root/etc/setup.sh" "$workspace_path"
     fi
 }
 
