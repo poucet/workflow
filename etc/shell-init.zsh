@@ -19,8 +19,8 @@ compinit -u &>/dev/null
 _generic_completion() {
     local tool_script="$1"
     local position=$((CURRENT - 1))
-    local -a options
-    options=("${(@f)$(${tool_script} complete "${position}" "${words[@]:1}" 2>/dev/null)}")
+    local output
+    output="$(${tool_script} complete "${position}" "${words[@]:1}" 2>/dev/null)"
     local exit_code=$?
 
     if [ $exit_code -ne 0 ]; then
@@ -28,7 +28,16 @@ _generic_completion() {
         return
     fi
 
-    if [ ${#options[@]} -gt 0 ]; then
+    if [ -n "$output" ]; then
+        local -a options
+        # Check if output contains newlines or spaces
+        if [[ "$output" == *$'\n'* ]]; then
+            # Split on newlines
+            options=("${(@f)output}")
+        else
+            # Split on spaces
+            options=("${(@s: :)output}")
+        fi
         _describe 'options' options
     else
         _files

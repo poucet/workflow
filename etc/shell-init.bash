@@ -26,7 +26,16 @@ _generic_completion() {
     fi
 
     if [ -n "$options" ]; then
-        COMPREPLY=($(compgen -W "$options" -- "$cur"))
+        # Convert newlines or spaces to array elements
+        local -a opts_array
+        if [[ "$options" == *$'\n'* ]]; then
+            # Options are newline-separated
+            mapfile -t opts_array <<< "$options"
+        else
+            # Options are space-separated
+            read -ra opts_array <<< "$options"
+        fi
+        COMPREPLY=($(compgen -W "${opts_array[*]}" -- "$cur"))
     else
         COMPREPLY=($(compgen -o default -o dirnames -f -- "$cur"))
     fi
