@@ -14,18 +14,39 @@ A powerful workflow management tool for Jujutsu (jj) that provides Git-like bran
 ## Installation
 
 1. Clone this repository
+
 2. Add the `bin` directory to your PATH:
    ```bash
    export PATH="$PATH:/path/to/workflow/bin"
    ```
-3. Source the shell init script in your shell RC file:
-   ```bash
-   # For bash
-   source /path/to/workflow/etc/shell-init.bash
 
-   # For zsh
-   source /path/to/workflow/etc/shell-init.zsh
+3. Add VSCode terminal integration to your shell RC file (`.bashrc` or `.zshrc`):
+
+   **For bash (~/.bashrc):**
+   ```bash
+   # VSCode terminal integration - load workflow tools
+   if [ "$TERM_PROGRAM" = "vscode" ]; then
+       source /path/to/workflow/etc/shell-init.bash
+       register_tools "/path/to/workflow"
+       register_tools "$(pwd)"
+   fi
    ```
+
+   **For zsh (~/.zshrc):**
+   ```bash
+   # VSCode terminal integration - load workflow tools
+   if [ "$TERM_PROGRAM" = "vscode" ]; then
+       source /path/to/workflow/etc/shell-init.zsh
+       register_tools "/path/to/workflow"
+       register_tools "$(pwd)"
+   fi
+   ```
+
+   This setup:
+   - Only loads in VSCode terminals (not other terminals)
+   - Sources the shell completion and commands
+   - Registers workflow tools from the installation directory
+   - Registers project-specific tools from the current directory
 
 ## Quick Start
 
