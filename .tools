@@ -1,0 +1,5 @@
+# This file lists the tools in this project that should be registered
+# for command-line completion by the central setup-completions.sh script.
+# Add one tool name per line.
+
+workflow
