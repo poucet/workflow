@@ -13,5 +13,6 @@
   "[markdown]": {
     "editor.wordWrap": "on",
     "editor.formatOnSave": true
-  }
+  },
+  "git.enabled": false
 }
