@@ -96,7 +96,7 @@ _jj_workspace_setup() {
 
 workflow_create() {
     if [ -z "$1" ]; then
-        echo "Usage: workflow create <branch-name>"
+        echo "Usage: workflow create <workspace-name>"
         return 1
     fi
 
@@ -123,7 +123,7 @@ workflow_create() {
 
 workflow_open() {
     if [ -z "$1" ]; then
-        echo "Usage: workflow open <branch-name>"
+        echo "Usage: workflow open <workspace-name>"
         return 1
     fi
 
@@ -148,7 +148,7 @@ workflow_open() {
 
 workflow_merge() {
     if [ -z "$1" ]; then
-        echo "Usage: workflow merge <branch-name>"
+        echo "Usage: workflow merge <workspace-name>"
         return 1
     fi
 
@@ -181,33 +181,35 @@ workflow_merge() {
 
 workflow_sync() {
     if [ -z "$1" ]; then
-        echo "Usage: workflow sync <branch-name>"
+        echo "Usage: workflow sync <workspace-name>"
         return 1
     fi
 
     local branch_name="$1"
+    local workspace="${branch_name}@"
 
-    # Rebase the branch onto latest main
-    jj rebase -b "$branch_name" -d main
+    # Rebase the workspace onto latest main
+    jj rebase -b "$workspace" -d main
 
     echo "✓ Synced '$branch_name' with main"
 }
 
 workflow_flatten() {
     if [ -z "$1" ] || [ -z "$2" ]; then
-        echo "Usage: workflow flatten <branch-name> <commit-message>"
+        echo "Usage: workflow flatten <workspace-name> <commit-message>"
         echo "Example: workflow flatten my-feature \"Add new authentication system\""
         return 1
     fi
 
     local branch_name="$1"
     local commit_message="$2"
+    local workspace="${branch_name}@"
 
     # Get the root commit of the branch (where it diverged from main)
     local base_commit=$(jj log -r "main" --no-graph -T "commit_id" --limit 1)
 
-    # Squash all commits from base to branch tip
-    jj squash --from "($base_commit)::" --to "$branch_name" -m "$commit_message"
+    # Squash all commits from base to workspace tip
+    jj squash --from "($base_commit)::" --to "$workspace" -m "$commit_message"
 
     echo "✓ Squashed all commits in '$branch_name'"
     echo "  New description: $commit_message"
@@ -215,7 +217,7 @@ workflow_flatten() {
 
 workflow_delete() {
     if [ -z "$1" ]; then
-        echo "Usage: workflow delete <branch-name>"
+        echo "Usage: workflow delete <workspace-name>"
         return 1
     fi
 
@@ -268,8 +270,8 @@ Jujutsu workflow commands:
 
   workflow create <name>             Create workspace, open in VSCode
   workflow open <name>               Open existing workspace in VSCode
-  workflow merge <name>              Merge branch into main (clean rebase)
-  workflow sync <name>               Sync branch with latest main
+  workflow merge <name>              Merge workspace into main (clean rebase)
+  workflow sync <name>               Sync workspace with latest main
   workflow flatten <name> "message"  Flatten all commits and set description
   workflow delete <name>             Delete workspace (if not ahead)
   workflow workspaces                List all workspaces
