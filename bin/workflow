@@ -1,7 +1,6 @@
 #!/bin/bash
 # jj workflow tool with subcommands
-# Can be called directly: jj-workflow start my-feature
-# Or via shell functions: jj-start my-feature
+# Can be called directly: workflow create my-feature
 
 # Get the repo root directory
 _jj_repo_root() {
@@ -16,21 +15,21 @@ _jj_generate_color() {
     # Use modulo 12 for more color variety (30-degree increments)
     local color_index=$((hash % 12))
 
-    # Balanced color palette with softer, distinct colors
-    # Avoiding strong reds, including teal, cyan, and other pleasant hues
+    # Diverse color palette with maximum visual distinction
+    # Colors chosen to be clearly different from each other
     case $color_index in
-        0)  echo "180,130,80" ;;  # Orange
-        1)  echo "180,160,90" ;;  # Gold
-        2)  echo "140,180,90" ;;  # Yellow-green
-        3)  echo "90,180,120" ;;  # Green
-        4)  echo "80,180,150" ;;  # Teal/Green-cyan
-        5)  echo "80,170,180" ;;  # Teal
-        6)  echo "80,150,190" ;;  # Cyan
-        7)  echo "80,130,200" ;;  # Sky blue
-        8)  echo "100,120,200" ;; # Blue
-        9)  echo "130,100,200" ;; # Blue-purple
-        10) echo "160,90,190" ;;  # Purple
-        11) echo "180,100,160" ;; # Magenta/Pink
+        0)  echo "60,140,200" ;;  # Blue
+        1)  echo "70,180,140" ;;  # Teal
+        2)  echo "180,140,60" ;;  # Orange/Gold
+        3)  echo "140,70,180" ;;  # Purple
+        4)  echo "90,170,90" ;;   # Green
+        5)  echo "200,90,120" ;;  # Pink/Magenta
+        6)  echo "80,160,190" ;;  # Cyan
+        7)  echo "160,120,70" ;;  # Brown/Amber
+        8)  echo "100,190,160" ;; # Mint/Aqua
+        9)  echo "180,100,60" ;;  # Rust/Orange
+        10) echo "110,110,200" ;; # Indigo
+        11) echo "70,180,110" ;;  # Sea green
     esac
 }
 
@@ -42,13 +41,19 @@ _jj_create_workspace_file() {
 
     # Get RGB color for this workspace
     local color_rgb=$(_jj_generate_color "$branch_name")
-    local color_rgb_light="$(echo $color_rgb | awk -F',' '{printf "%d,%d,%d", int($1*1.3), int($2*1.3), int($3*1.3)}')"
+    # Calculate lighter color, capping at 255
+    local color_rgb_light="$(echo $color_rgb | awk -F',' '{
+        r = int($1*1.3); if (r > 255) r = 255;
+        g = int($2*1.3); if (g > 255) g = 255;
+        b = int($3*1.3); if (b > 255) b = 255;
+        printf "%d,%d,%d", r, g, b
+    }')"
 
     cat > "$workspace_file" << EOF
 {
   "folders": [
     {
-      "path": "$branch_name"
+      "path": "$workspace_path"
     }
   ],
   "settings": {
@@ -76,7 +81,8 @@ _jj_workspace_setup() {
 
     # Run project-specific setup script if it exists
     if [ -f "$repo_root/etc/setup.sh" ]; then
-        bash "$repo_root/etc/setup.sh" "$workspace_path"
+        # Execute directly to preserve color output and TTY connection
+        "$repo_root/etc/setup.sh" "$workspace_path"
     fi
 }
 
@@ -84,9 +90,9 @@ _jj_workspace_setup() {
 # Subcommands
 # ============================================================================
 
-workflow_start() {
+workflow_create() {
     if [ -z "$1" ]; then
-        echo "Usage: jj-start <branch-name>"
+        echo "Usage: workflow create <branch-name>"
         return 1
     fi
 
@@ -113,7 +119,7 @@ workflow_start() {
 
 workflow_open() {
     if [ -z "$1" ]; then
-        echo "Usage: jj-open <branch-name>"
+        echo "Usage: workflow open <branch-name>"
         return 1
     fi
 
@@ -138,7 +144,7 @@ workflow_open() {
 
 workflow_merge() {
     if [ -z "$1" ]; then
-        echo "Usage: jj-merge <branch-name>"
+        echo "Usage: workflow merge <branch-name>"
         return 1
     fi
 
@@ -171,7 +177,7 @@ workflow_merge() {
 
 workflow_sync() {
     if [ -z "$1" ]; then
-        echo "Usage: jj-sync <branch-name>"
+        echo "Usage: workflow sync <branch-name>"
         return 1
     fi
 
@@ -185,8 +191,8 @@ workflow_sync() {
 
 workflow_flatten() {
     if [ -z "$1" ] || [ -z "$2" ]; then
-        echo "Usage: jj-flatten <branch-name> <commit-message>"
-        echo "Example: jj-flatten my-feature \"Add new authentication system\""
+        echo "Usage: workflow flatten <branch-name> <commit-message>"
+        echo "Example: workflow flatten my-feature \"Add new authentication system\""
         return 1
     fi
 
@@ -205,7 +211,7 @@ workflow_flatten() {
 
 workflow_delete() {
     if [ -z "$1" ]; then
-        echo "Usage: jj-delete <branch-name>"
+        echo "Usage: workflow delete <branch-name>"
         return 1
     fi
 
@@ -256,7 +262,7 @@ workflow_help() {
     cat <<EOF
 Jujutsu workflow commands:
 
-  workflow start <name>              Create workspace, open in VSCode
+  workflow create <name>             Create workspace, open in VSCode
   workflow open <name>               Open existing workspace in VSCode
   workflow merge <name>              Merge branch into main (clean rebase)
   workflow sync <name>               Sync branch with latest main
@@ -266,7 +272,7 @@ Jujutsu workflow commands:
   workflow files [revision]          Show modified files (default: @)
 
 Example workflow:
-  1. workflow start my-feature
+  1. workflow create my-feature
      # Creates workspace and opens in VSCode with unique color
   2. # ... make changes in the workspace ...
   3. workflow open my-feature              # reopen if needed
@@ -276,8 +282,8 @@ Example workflow:
   7. jj git push                           # push to GitHub
 
 Multi-workspace workflow (work in parallel):
-  1. workflow start feature1
-  2. workflow start feature2
+  1. workflow create feature1
+  2. workflow create feature2
   3. # Each opens in separate VSCode window with different colors!
 
 EOF
@@ -289,7 +295,7 @@ EOF
 
 # Export list of available commands (for meta-wrapper discovery)
 workflow_commands() {
-    echo "start open merge sync flatten delete workspaces files help"
+    echo "create open merge sync flatten delete workspaces files help"
 }
 
 # ============================================================================
@@ -320,7 +326,7 @@ workflow_complete() {
     local arg_position=$((position - 1))
 
     case "$subcommand" in
-        start)
+        create)
             # Arg 1: no completion (freeform workspace name)
             ;;
         open|merge|sync|delete)
@@ -350,12 +356,12 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         complete)
             workflow_complete "$@"
             ;;
-        start|open|merge|sync|flatten|delete|workspaces|files|help)
+        create|open|merge|sync|flatten|delete|workspaces|files|help)
             "workflow_$cmd" "$@"
             ;;
         *)
             echo "Unknown command: $cmd"
-            echo "Run 'jj-workflow help' for usage"
+            echo "Run 'workflow help' for usage"
             exit 1
             ;;
     esac
