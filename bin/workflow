@@ -188,15 +188,14 @@ workflow_merge() {
         # Original behavior: merge all commits
         echo "Merging all commits from '$branch_name' into main..."
 
-        # Rebase the workspace commits onto main (excluding the empty working copy commit)
-        # Use - operator to get parent of workspace
-        jj rebase -s "$revision-" -d main
+        # Rebase all commits up to (but excluding) the workspace's empty commit onto main
+        jj rebase -b "$revision-" -d main
 
-        # Move main bookmark to the tip of rebased commits
-        jj bookmark set main -r "$revision-"
+        # Edit the workspace to move @ there (and update git HEAD)
+        jj edit "$revision"
 
-        # Edit main to update git HEAD
-        jj edit main
+        # Move main bookmark to the parent (the last real commit, not the empty workspace)
+        jj bookmark set main -r @-
 
         echo "✓ Merged '$branch_name' into main"
     fi
