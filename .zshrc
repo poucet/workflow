@@ -28,24 +28,12 @@ _setup_tool_completion() {
 
     # Create completion function
     eval "_comp_${tool_name}() {
-        local -a commands
-        local cmd=\"\${words[2]}\"
-
-        # If we're completing the first argument (the subcommand)
-        if [ \$CURRENT -eq 2 ]; then
-            commands=(\$(\"$tool_script\" commands 2>/dev/null))
-            _describe 'commands' commands
-            return
-        fi
-
-        # Otherwise, get completions from the script
-        # Position is CURRENT - 1 (to account for tool name at position 1)
         local position=\$((CURRENT - 1))
         local current_word=\"\${words[\$CURRENT]}\"
 
-        # Ask script for completions
+        # Get completions from script - it handles both commands and arguments
         local -a options
-        options=(\$(\"$tool_script\" complete \"\$cmd\" \"\$position\" \"\$current_word\" 2>/dev/null))
+        options=(\$(\"$tool_script\" complete \"\$position\" \"\${words[@]:1}\" 2>/dev/null))
 
         if [ \${#options[@]} -gt 0 ]; then
             _describe 'options' options

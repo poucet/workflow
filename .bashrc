@@ -25,18 +25,10 @@ _setup_tool_completion() {
     # Create completion function
     eval "_comp_${tool_name}() {
         local cur=\${COMP_WORDS[COMP_CWORD]}
-        local cmd=\${COMP_WORDS[1]}
-
-        # If we're completing the first argument (the subcommand)
-        if [ \$COMP_CWORD -eq 1 ]; then
-            local commands=\$(\"$tool_script\" commands 2>/dev/null)
-            COMPREPLY=(\$(compgen -W \"\$commands\" -- \"\$cur\"))
-            return
-        fi
-
-        # Otherwise, get completions from the script
         local position=\$COMP_CWORD
-        local options=\$(\"$tool_script\" complete \"\$cmd\" \"\$position\" \"\$cur\" 2>/dev/null)
+
+        # Get completions from script - it handles both commands and arguments
+        local options=\$(\"$tool_script\" complete \"\$position\" \"\${COMP_WORDS[@]:1}\" 2>/dev/null)
 
         if [ -n \"\$options\" ]; then
             COMPREPLY=(\$(compgen -W \"\$options\" -- \"\$cur\"))

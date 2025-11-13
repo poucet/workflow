@@ -293,31 +293,39 @@ _workflow_list_workspaces() {
     ls -1 "$(_jj_repo_root)/.jj-workspaces" 2>/dev/null | grep -v '\.code-workspace$' | sort
 }
 
-# Return completion options for a given subcommand and position
-# Usage: workflow complete <subcommand> <position> <current_word>
+# Return completion options for current position
+# Usage: workflow complete <position> <word1> <word2> ...
+# Position 1 = completing subcommand, Position 2+ = completing arguments
 workflow_complete() {
-    local subcommand="$1"
-    local position="$2"
-    local current_word="$3"
+    local position="$1"
+    shift
+    local -a words=("$@")
+
+    # Position 1: complete subcommand
+    if [ "$position" -eq 1 ]; then
+        workflow_commands
+        return
+    fi
+
+    # Position 2+: complete arguments based on subcommand
+    local subcommand="${words[0]}"
+    local arg_position=$((position - 1))
 
     case "$subcommand" in
         start)
-            # Position 1: no completion (freeform workspace name)
+            # Arg 1: no completion (freeform workspace name)
             ;;
         open|merge|sync|delete)
-            # Position 1: list available workspaces
-            [ "$position" -eq 1 ] && _workflow_list_workspaces
+            # Arg 1: list available workspaces
+            [ "$arg_position" -eq 1 ] && _workflow_list_workspaces
             ;;
         flatten)
-            # Position 1: list available workspaces
-            # Position 2: no completion (freeform commit message)
-            [ "$position" -eq 1 ] && _workflow_list_workspaces
+            # Arg 1: list available workspaces
+            # Arg 2: no completion (freeform commit message)
+            [ "$arg_position" -eq 1 ] && _workflow_list_workspaces
             ;;
         files)
-            # Position 1: no completion (freeform revision)
-            ;;
-        *)
-            # No completion for other commands
+            # Arg 1: no completion (freeform revision)
             ;;
     esac
 }
