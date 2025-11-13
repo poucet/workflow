@@ -15,12 +15,7 @@ A powerful workflow management tool for Jujutsu (jj) that provides Git-like bran
 
 1. Clone this repository
 
-2. Add the `bin` directory to your PATH:
-   ```bash
-   export PATH="$PATH:/path/to/workflow/bin"
-   ```
-
-3. Add VSCode terminal integration to your shell RC file (`.bashrc` or `.zshrc`):
+2. Add VSCode terminal integration to your shell RC file (`.bashrc` or `.zshrc`):
 
    **For bash (~/.bashrc):**
    ```bash
