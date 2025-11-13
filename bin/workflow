@@ -194,14 +194,11 @@ workflow_merge() {
             return 1
         fi
 
-        # Rebase all commits up to (but excluding) the workspace's empty commit onto main
-        jj rebase -b "$revision-" -d main
+        # Create a merge commit combining main and the workspace
+        jj new main "$revision-"
 
-        # Move main bookmark to the newly rebased tip (parent of workspace)
-        jj bookmark set main -r "$revision-"
-
-        # Edit main to update git HEAD
-        jj edit main
+        # Update main bookmark to the merge commit
+        jj bookmark set main -r @
 
         echo "✓ Merged '$branch_name' into main"
     fi
