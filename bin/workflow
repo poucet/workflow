@@ -188,14 +188,20 @@ workflow_merge() {
         # Original behavior: merge all commits
         echo "Merging all commits from '$branch_name' into main..."
 
+        # Check if there are any commits to merge
+        if ! jj log -r "$revision- ~ main" --no-graph 2>/dev/null | grep -q .; then
+            echo "Error: No commits to merge from '$branch_name' (workspace is up to date with main)"
+            return 1
+        fi
+
         # Rebase all commits up to (but excluding) the workspace's empty commit onto main
         jj rebase -b "$revision-" -d main
 
-        # Edit the workspace to move @ there (and update git HEAD)
-        jj edit "$revision"
+        # Move main bookmark to the newly rebased tip (parent of workspace)
+        jj bookmark set main -r "$revision-"
 
-        # Move main bookmark to the parent (the last real commit, not the empty workspace)
-        jj bookmark set main -r @-
+        # Edit main to update git HEAD
+        jj edit main
 
         echo "✓ Merged '$branch_name' into main"
     fi
