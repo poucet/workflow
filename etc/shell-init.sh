@@ -6,6 +6,16 @@
 # This file contains shell-agnostic helper functions.
 # Do not source this directly - use shell-init.zsh or shell-init.bash instead.
 
+# Sanitize tool name to prevent command injection
+_sanitize_tool_name() {
+    if [[ "$1" =~ ^[a-zA-Z0-9_]+$ ]]; then
+        echo "$1"
+    else
+        echo "⚠ Invalid tool name: $1" >&2
+        return 1
+    fi
+}
+
 # Register tools from a specified directory, based on a '.tools' manifest file.
 # Usage: register_tools /path/to/project
 register_tools() {
@@ -37,6 +47,10 @@ register_tools() {
         if [[ "$tool_name" =~ ^\s*# ]] || [[ -z "$tool_name" ]]; then
             continue
         fi
-        _setup_completion_logic "$tool_name" "$project_bin_dir/$tool_name"
+
+        local sanitized_tool_name=$(_sanitize_tool_name "$tool_name")
+        if [ -n "$sanitized_tool_name" ]; then
+            _setup_completion_logic "$sanitized_tool_name" "$project_bin_dir/$sanitized_tool_name"
+        fi
     done < "$target_dir/.tools"
 }
