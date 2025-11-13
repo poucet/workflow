@@ -148,11 +148,15 @@ workflow_open() {
 
 workflow_merge() {
     if [ -z "$1" ]; then
-        echo "Usage: workflow merge <workspace-name>"
+        echo "Usage: workflow merge <workspace-name> [commit-ids...]"
+        echo "  If commit-ids are provided, only those commits will be merged"
+        echo "  Otherwise, all commits will be merged"
         return 1
     fi
 
     local branch_name="$1"
+    shift
+    local selected_commits=("$@")
     local revision="$branch_name"
 
     # Check if the bookmark exists, if not try with @ suffix (workspace)
@@ -166,16 +170,37 @@ workflow_merge() {
         fi
     fi
 
-    # Rebase the branch onto main
-    jj rebase -b "$revision" -d main
+    # If specific commits are selected, merge only those
+    if [ ${#selected_commits[@]} -gt 0 ]; then
+        echo "Merging selected commits from '$branch_name' into main..."
 
-    # Commit the changes
-    jj commit
+        # Switch to main
+        jj edit main
 
-    # Move main bookmark to the parent (the committed change)
-    jj bookmark set main -r @-
+        # Cherry-pick each selected commit
+        for commit_id in "${selected_commits[@]}"; do
+            echo "  Merging commit: $commit_id"
+            jj squash --from "$commit_id" --into @
+        done
 
-    echo "✓ Merged '$branch_name' into main"
+        echo "✓ Merged ${#selected_commits[@]} commit(s) from '$branch_name' into main"
+    else
+        # Original behavior: merge all commits
+        echo "Merging all commits from '$branch_name' into main..."
+
+        # Rebase the workspace commits onto main (excluding the empty working copy commit)
+        # Use - operator to get parent of workspace
+        jj rebase -s "$revision-" -d main
+
+        # Move main bookmark to the tip of rebased commits
+        jj bookmark set main -r "$revision-"
+
+        # Edit main to update git HEAD
+        jj edit main
+
+        echo "✓ Merged '$branch_name' into main"
+    fi
+
     echo "  Use 'jj git push' to push to remote"
 }
 
@@ -188,8 +213,8 @@ workflow_sync() {
     local branch_name="$1"
     local workspace="${branch_name}@"
 
-    # Rebase the workspace onto latest main
-    jj rebase -b "$workspace" -d main
+    # Rebase the workspace's commits onto latest main (excluding empty working copy)
+    jj rebase -s "$workspace-" -d main
 
     echo "✓ Synced '$branch_name' with main"
 }
@@ -270,7 +295,9 @@ Jujutsu workflow commands:
 
   workflow create <name>             Create workspace, open in VSCode
   workflow open <name>               Open existing workspace in VSCode
-  workflow merge <name>              Merge workspace into main (clean rebase)
+  workflow merge <name> [commits...] Merge workspace into main
+                                     - No commits: merge all changes
+                                     - With commits: merge only those commits
   workflow sync <name>               Sync workspace with latest main
   workflow flatten <name> "message"  Flatten all commits and set description
   workflow delete <name>             Delete workspace (if not ahead)
@@ -284,13 +311,20 @@ Example workflow:
   3. workflow open my-feature              # reopen if needed
   4. workflow sync my-feature              # sync with main if needed
   5. workflow flatten my-feature "Add user authentication with JWT"
-  6. workflow merge my-feature             # merge into main
+  6. workflow merge my-feature             # merge all commits into main
+     # OR: workflow merge my-feature abc123 def456  # merge specific commits
   7. jj git push                           # push to GitHub
 
 Multi-workspace workflow (work in parallel):
   1. workflow create feature1
   2. workflow create feature2
   3. # Each opens in separate VSCode window with different colors!
+
+Selective merging:
+  # View commits in your workspace
+  jj log -r 'my-feature@ ~ main'
+  # Merge only specific commits
+  workflow merge my-feature abc123 def456
 
 EOF
 }
