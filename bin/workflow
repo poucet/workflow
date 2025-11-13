@@ -12,17 +12,25 @@ _jj_repo_root() {
 _jj_generate_color() {
     local name="$1"
     local hash=$(echo -n "$name" | cksum | cut -d' ' -f1)
-    local hue=$((hash % 360))
 
-    # Simple HSL to RGB approximation for common hues
-    case $((hue / 60)) in
-        0) echo "180,80,80" ;;   # Red
-        1) echo "200,150,80" ;;  # Orange/Yellow
-        2) echo "120,180,80" ;;  # Yellow/Green
-        3) echo "80,180,150" ;;  # Green/Cyan
-        4) echo "80,150,200" ;;  # Cyan/Blue
-        5) echo "150,100,200" ;; # Blue/Purple
-        *) echo "180,100,180" ;; # Purple/Red
+    # Use modulo 12 for more color variety (30-degree increments)
+    local color_index=$((hash % 12))
+
+    # Balanced color palette with softer, distinct colors
+    # Avoiding strong reds, including teal, cyan, and other pleasant hues
+    case $color_index in
+        0)  echo "180,130,80" ;;  # Orange
+        1)  echo "180,160,90" ;;  # Gold
+        2)  echo "140,180,90" ;;  # Yellow-green
+        3)  echo "90,180,120" ;;  # Green
+        4)  echo "80,180,150" ;;  # Teal/Green-cyan
+        5)  echo "80,170,180" ;;  # Teal
+        6)  echo "80,150,190" ;;  # Cyan
+        7)  echo "80,130,200" ;;  # Sky blue
+        8)  echo "100,120,200" ;; # Blue
+        9)  echo "130,100,200" ;; # Blue-purple
+        10) echo "160,90,190" ;;  # Purple
+        11) echo "180,100,160" ;; # Magenta/Pink
     esac
 }
 
