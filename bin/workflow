@@ -215,8 +215,17 @@ workflow_sync() {
     local branch_name="$1"
     local workspace="${branch_name}@"
 
-    # Rebase the workspace's commits onto latest main (excluding empty working copy)
-    jj rebase -s "$workspace-" -d main
+    # Check if workspace has any commits
+    if ! jj log -r "$workspace- ~ main" --no-graph 2>/dev/null | grep -q .; then
+        echo "Workspace '$branch_name' is already up to date with main"
+        return 0
+    fi
+
+    # Switch to the workspace
+    jj edit "$workspace"
+
+    # Create a merge commit to sync main into the workspace
+    jj new "$workspace-" main
 
     echo "✓ Synced '$branch_name' with main"
 }
@@ -240,6 +249,29 @@ workflow_flatten() {
 
     echo "✓ Squashed all commits in '$branch_name'"
     echo "  New description: $commit_message"
+}
+
+workflow_linearize() {
+    if [ -z "$1" ]; then
+        echo "Usage: workflow linearize <workspace-name>"
+        echo "Rebases workspace commits onto main for linear history"
+        return 1
+    fi
+
+    local branch_name="$1"
+    local workspace="${branch_name}@"
+
+    # Check if workspace has any commits
+    if ! jj log -r "$workspace- ~ main" --no-graph 2>/dev/null | grep -q .; then
+        echo "Workspace '$branch_name' has no commits to linearize"
+        return 0
+    fi
+
+    # Rebase the workspace's commits onto main (excluding empty working copy)
+    jj rebase -s "$workspace-" -d main
+
+    echo "✓ Linearized '$branch_name' onto main"
+    echo "  Note: This may cause conflicts if workspace had merge commits"
 }
 
 workflow_delete() {
@@ -300,7 +332,8 @@ Jujutsu workflow commands:
   workflow merge <name> [commits...] Merge workspace into main
                                      - No commits: merge all changes
                                      - With commits: merge only those commits
-  workflow sync <name>               Sync workspace with latest main
+  workflow sync <name>               Sync workspace with main (merge commit)
+  workflow linearize <name>          Rebase workspace for linear history
   workflow flatten <name> "message"  Flatten all commits and set description
   workflow delete <name>             Delete workspace (if not ahead)
   workflow workspaces                List all workspaces
@@ -337,7 +370,7 @@ EOF
 
 # Export list of available commands (for meta-wrapper discovery)
 workflow_commands() {
-    echo "create open merge sync flatten delete workspaces files help"
+    echo "create open merge sync linearize flatten delete workspaces files help"
 }
 
 # ============================================================================
@@ -371,7 +404,7 @@ workflow_complete() {
         create)
             # Arg 1: no completion (freeform workspace name)
             ;;
-        open|merge|sync|delete)
+        open|merge|sync|linearize|delete)
             # Arg 1: list available workspaces
             [ "$arg_position" -eq 1 ] && _workflow_list_workspaces
             ;;
@@ -398,7 +431,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         complete)
             workflow_complete "$@"
             ;;
-        create|open|merge|sync|flatten|delete|workspaces|files|help)
+        create|open|merge|sync|linearize|flatten|delete|workspaces|files|help)
             "workflow_$cmd" "$@"
             ;;
         *)
