@@ -7,7 +7,7 @@ A powerful workflow management tool for Jujutsu (jj) that provides Git-like bran
 - **Isolated Workspaces**: Create separate working directories for each feature
 - **Color-Coded VSCode Windows**: Each workspace gets a unique color theme for easy identification
 - **Selective Merging**: Merge all commits or cherry-pick specific ones
-- **Merge Commits**: Simple merge workflow that preserves commit history
+- **Linear History**: Rebase-based workflow for clean, linear commit history
 - **Project-Specific Setup**: Extensible setup hooks for custom initialization
 - **Multi-Workspace Support**: Work on multiple features simultaneously
 
@@ -305,12 +305,13 @@ your-repo/
 
 ### Merge Strategy
 
-The tool uses a simple merge commit strategy:
+The tool uses a rebase-based merge strategy:
 
-1. Create a merge commit with both main and workspace as parents using `jj new main workspace-`
-2. Move main bookmark to the merge commit
+1. Rebase workspace commits onto main using `jj rebase -s workspace- -d main`
+2. Move main bookmark to the tip of rebased commits
+3. Update git HEAD to point to main
 
-This preserves all individual commits from the workspace and creates a proper merge commit, maintaining the full history of both branches. Conflicts are handled by jujutsu's first-class conflict support, allowing you to resolve them at your convenience.
+This creates a clean, linear history by replaying workspace commits on top of main. Individual commits and their messages are preserved. Conflicts are handled by jujutsu's first-class conflict support, allowing you to resolve them at your convenience.
 
 ## Tips and Best Practices
 

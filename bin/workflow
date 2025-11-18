@@ -194,13 +194,17 @@ workflow_merge() {
             return 1
         fi
 
-        # Create a merge commit combining main and the workspace
-        jj new main "$revision-"
+        # Rebase workspace commits onto main one by one
+        # This creates a linear history without merge commits
+        jj rebase -s "$revision-" -d main
 
-        # Update main bookmark to the merge commit
-        jj bookmark set main -r @
+        # Move main bookmark to the tip of rebased commits
+        jj bookmark set main -r "$revision-"
 
-        echo "✓ Merged '$branch_name' into main"
+        # Edit main to update git HEAD
+        jj edit main
+
+        echo "✓ Merged '$branch_name' into main (rebased)"
     fi
 
     echo "  Use 'jj git push' to push to remote"
@@ -215,19 +219,10 @@ workflow_sync() {
     local branch_name="$1"
     local workspace="${branch_name}@"
 
-    # Check if workspace has any commits
-    if ! jj log -r "$workspace- ~ main" --no-graph 2>/dev/null | grep -q .; then
-        echo "Workspace '$branch_name' is already up to date with main"
-        return 0
-    fi
+    # Rebase workspace commits onto latest main
+    jj rebase -s "$workspace-" -d main
 
-    # Switch to the workspace
-    jj edit "$workspace"
-
-    # Create a merge commit to sync main into the workspace
-    jj new "$workspace-" main
-
-    echo "✓ Synced '$branch_name' with main"
+    echo "✓ Synced '$branch_name' with main (rebased)"
 }
 
 workflow_flatten() {
@@ -253,22 +248,46 @@ workflow_flatten() {
 
 workflow_linearize() {
     if [ -z "$1" ]; then
-        echo "Usage: workflow linearize <base-commit>"
+        echo "Usage: workflow linearize <base-commit> [--squash]"
         echo "Linearizes main by rebasing all commits since <base-commit>"
+        echo "  --squash: Squash all commits into one (avoids conflicts)"
         echo "Example: workflow linearize abc123"
-        echo "         workflow linearize origin/main"
+        echo "         workflow linearize origin/main --squash"
         return 1
     fi
 
     local base="$1"
+    local squash=false
 
-    echo "Linearizing main branch history from $base..."
+    if [ "$2" = "--squash" ]; then
+        squash=true
+    fi
 
-    # Rebase all commits on main since the base
-    jj rebase -s "$base::main" -d "$base"
+    if [ "$squash" = true ]; then
+        echo "Squashing all commits from $base to main..."
 
-    echo "✓ Linearized main branch"
-    echo "  All merge commits have been flattened into linear history"
+        # Create a new commit on base with all changes squashed
+        jj new "$base"
+        jj restore --from main
+        jj describe -m "Squashed history from $base to main"
+
+        # Move main to this new commit
+        jj bookmark set main -r @
+
+        echo "✓ Squashed main branch history"
+        echo "  All commits have been combined into one"
+    else
+        echo "Linearizing main branch history from $base..."
+
+        # Rebase all commits between base and main (excluding base itself)
+        # Use children() to get commits after the base
+        jj rebase -s "($base)+::main" -d "$base"
+
+        echo "✓ Linearized main branch"
+        echo "  All merge commits have been flattened into linear history"
+        echo "  Note: This may create conflicts that need to be resolved"
+    fi
+
     echo "  Review with 'jj log' before pushing"
 }
 
@@ -330,7 +349,7 @@ Jujutsu workflow commands:
   workflow merge <name> [commits...] Merge workspace into main
                                      - No commits: merge all changes
                                      - With commits: merge only those commits
-  workflow sync <name>               Sync workspace with main (merge commit)
+  workflow sync <name>               Sync workspace with main (rebase)
   workflow linearize <base-commit>   Linearize main history from base commit
   workflow flatten <name> "message"  Flatten all commits and set description
   workflow delete <name>             Delete workspace (if not ahead)
