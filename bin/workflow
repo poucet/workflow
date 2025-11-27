@@ -94,6 +94,31 @@ _jj_workspace_setup() {
 # Subcommands
 # ============================================================================
 
+workflow_init() {
+    # Check if already a jj repo
+    if [ -d ".jj" ]; then
+        echo "Already a jj repository"
+        return 0
+    fi
+
+    # Check if it's a git repo
+    if [ ! -d ".git" ]; then
+        echo "Error: Not a git repository"
+        return 1
+    fi
+
+    echo "Converting git repo to jj (colocated)..."
+
+    # Initialize jj in colocated mode
+    jj git init --colocate
+
+    # Create main bookmark pointing to current HEAD
+    jj bookmark create main -r @-
+
+    echo "✓ Initialized jj repository (colocated with git)"
+    echo "  Main bookmark set to current HEAD"
+}
+
 workflow_create() {
     if [ -z "$1" ]; then
         echo "Usage: workflow create <workspace-name>"
@@ -194,12 +219,12 @@ workflow_merge() {
             return 1
         fi
 
-        # Find the root commits of the workspace branch that aren't in main
-        # and rebase them onto main
-        jj rebase -s "roots($revision- ~ main)" -d main
+        # Edit the workspace, then rebase onto main
+        jj edit "$revision"
+        jj rebase -d main
 
         # Move main bookmark to the tip of rebased commits (parent of workspace empty commit)
-        jj bookmark set main -r "$revision-"
+        jj bookmark set main -r @-
 
         # Edit main to update git HEAD
         jj edit main
@@ -344,6 +369,7 @@ workflow_help() {
     cat <<EOF
 Jujutsu workflow commands:
 
+  workflow init                      Convert git repo to jj (colocated)
   workflow create <name>             Create workspace, open in VSCode
   workflow open <name>               Open existing workspace in VSCode
   workflow merge <name> [commits...] Merge workspace into main
@@ -387,7 +413,7 @@ EOF
 
 # Export list of available commands (for meta-wrapper discovery)
 workflow_commands() {
-    echo "create open merge sync linearize flatten delete workspaces files help"
+    echo "init create open merge sync linearize flatten delete workspaces files help"
 }
 
 # ============================================================================
@@ -448,7 +474,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         complete)
             workflow_complete "$@"
             ;;
-        create|open|merge|sync|linearize|flatten|delete|workspaces|files|help)
+        init|create|open|merge|sync|linearize|flatten|delete|workspaces|files|help)
             "workflow_$cmd" "$@"
             ;;
         *)
