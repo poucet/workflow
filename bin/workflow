@@ -115,6 +115,20 @@ workflow_init() {
     # Create main bookmark pointing to current HEAD
     jj bookmark create main -r @-
 
+    # Create .jj-workspaces directory
+    mkdir -p .jj-workspaces
+
+    # Add .jj-workspaces to .gitignore if not already there
+    if [ -f ".gitignore" ]; then
+        if ! grep -q "^\.jj-workspaces" .gitignore; then
+            echo ".jj-workspaces" >> .gitignore
+            echo "  Added .jj-workspaces to .gitignore"
+        fi
+    else
+        echo ".jj-workspaces" > .gitignore
+        echo "  Created .gitignore with .jj-workspaces"
+    fi
+
     echo "✓ Initialized jj repository (colocated with git)"
     echo "  Main bookmark set to current HEAD"
 }
