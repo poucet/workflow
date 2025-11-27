@@ -194,11 +194,11 @@ workflow_merge() {
             return 1
         fi
 
-        # Rebase workspace commits onto main one by one
-        # This creates a linear history without merge commits
-        jj rebase -s "$revision-" -d main
+        # Find the root commits of the workspace branch that aren't in main
+        # and rebase them onto main
+        jj rebase -s "roots($revision- ~ main)" -d main
 
-        # Move main bookmark to the tip of rebased commits
+        # Move main bookmark to the tip of rebased commits (parent of workspace empty commit)
         jj bookmark set main -r "$revision-"
 
         # Edit main to update git HEAD
@@ -219,8 +219,8 @@ workflow_sync() {
     local branch_name="$1"
     local workspace="${branch_name}@"
 
-    # Rebase workspace commits onto latest main
-    jj rebase -s "$workspace-" -d main
+    # Rebase all workspace commits (from root) onto latest main
+    jj rebase -s "roots($workspace- ~ main)" -d main
 
     echo "✓ Synced '$branch_name' with main (rebased)"
 }
