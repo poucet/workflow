@@ -46,6 +46,9 @@ A powerful workflow management tool for Jujutsu (jj) that provides Git-like bran
 ## Quick Start
 
 ```bash
+# Initialize a git repo for jj (if not already done)
+workflow init
+
 # Create a new feature workspace
 workflow create my-feature
 
@@ -67,6 +70,21 @@ workflow delete my-feature
 ```
 
 ## Commands
+
+### `workflow init`
+
+Converts an existing git repository to a jj (Jujutsu) colocated repository.
+
+```bash
+cd /path/to/git/repo
+workflow init
+```
+
+This will:
+- Initialize jj in colocated mode (keeps git working alongside jj)
+- Create a `main` bookmark pointing to the current HEAD
+- Create the `.jj-workspaces` directory
+- Add `.jj-workspaces` to `.gitignore`
 
 ### `workflow create <name>`
 
