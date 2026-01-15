@@ -105,43 +105,10 @@ _workflow_repo_root() {
 # Subcommands
 # ============================================================================
 
-workflow_setup() {
-    local workflow_repo="$(_workflow_repo_root)"
-
-    echo "Setting up Simply workflow at user level..."
-    echo "From workflow repo: $workflow_repo"
-
-    # Create ~/.simply/ directory
-    mkdir -p "$HOME/.simply"
-
-    # Symlink templates
-    if [[ -L "$HOME/.simply/templates" ]]; then
-        rm "$HOME/.simply/templates"
-    fi
-    ln -s "$workflow_repo/simply/templates" "$HOME/.simply/templates"
-    echo "✓ Linked ~/.simply/templates/ -> $workflow_repo/simply/templates"
-
-    # Create ~/.claude/commands/
-    mkdir -p "$HOME/.claude/commands"
-
-    # Symlink simply.md command
-    if [[ -L "$HOME/.claude/commands/simply.md" ]]; then
-        rm "$HOME/.claude/commands/simply.md"
-    fi
-    ln -s "$workflow_repo/simply/simply.md" "$HOME/.claude/commands/simply.md"
-    echo "✓ Linked ~/.claude/commands/simply.md -> $workflow_repo/simply/simply.md"
-
-    echo ""
-    echo "✓ Simply workflow installed at user level!"
-    echo ""
-    echo "Next steps:"
-    echo "  Run 'workflow install' in any project to set up project state"
-}
-
-workflow_install() {
+workflow_init() {
     local target_dir="$(pwd)"
 
-    echo "Installing Simply workflow into: $target_dir"
+    echo "Initializing jj workspace support in: $target_dir"
 
     # Check if target is a git or jj repo
     if [[ ! -d "$target_dir/.git" && ! -d "$target_dir/.jj" ]]; then
@@ -168,28 +135,11 @@ workflow_install() {
     mkdir -p "$target_dir/.jj-workspaces"
     echo "✓ Created .jj-workspaces directory"
 
-    # Create docs directory with initial simply.yaml
-    mkdir -p "$target_dir/docs"
-    if [[ -e "$target_dir/docs/simply.yaml" ]]; then
-        echo "docs/simply.yaml already exists, skipping"
-    else
-        local project_name="$(basename "$target_dir")"
-        cat > "$target_dir/docs/simply.yaml" << EOF
-# Simply workflow state
-project: $project_name
-version: "0.1"
-phase: "01"
-EOF
-        echo "✓ Created docs/simply.yaml"
-    fi
-
     echo ""
-    echo "✓ Simply installed in project!"
+    echo "✓ Workspace support initialized!"
     echo ""
     echo "Next steps:"
-    echo "  1. Edit docs/simply.yaml to set your project/version/phase"
-    echo "  2. Create your first phase: docs/{project}/{version}/phases/01/"
-    echo "  3. Use /simply status to check workflow state"
+    echo "  Use 'workflow create <name>' to create a workspace"
 }
 
 workflow_create() {
@@ -442,8 +392,7 @@ workflow_help() {
     cat <<EOF
 Jujutsu workflow commands:
 
-  workflow setup                     Install Simply at user level (run once)
-  workflow install                   Set up Simply in current project
+  workflow init                      Initialize workspace support in project
   workflow create <name>             Create workspace, open in VSCode
   workflow open <name>               Open existing workspace in VSCode
   workflow merge <name> [commits...] Merge workspace into main
@@ -487,7 +436,7 @@ EOF
 
 # Export list of available commands (for meta-wrapper discovery)
 workflow_commands() {
-    echo "setup install create open merge sync linearize flatten delete workspaces files help"
+    echo "init create open merge sync linearize flatten delete workspaces files help"
 }
 
 # ============================================================================
@@ -548,7 +497,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         complete)
             workflow_complete "$@"
             ;;
-        setup|install|create|open|merge|sync|linearize|flatten|delete|workspaces|files|help)
+        init|create|open|merge|sync|linearize|flatten|delete|workspaces|files|help)
             "workflow_$cmd" "$@"
             ;;
         *)

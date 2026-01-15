@@ -1,3 +1,8 @@
+---
+description: Development workflow system for managing phases, tasks, and project state
+argument-hint: <action> [args]
+---
+
 # Simply
 
 Development workflow system for Claude Code.
@@ -11,10 +16,12 @@ Read from `docs/simply.yaml`:
 
 ## Directory Structure
 
-User-level (installed once via `workflow setup`):
+User-level (installed once via `simply/setup.sh`):
 ```
-~/.simply/
-└── templates/                # Symlink to workflow repo templates
+~/.simply/                    # Symlink to workflow repo simply/
+├── simply.md
+├── setup.sh
+└── templates/
     ├── version/
     │   ├── ROADMAP.md
     │   └── IDEAS.md
@@ -24,10 +31,10 @@ User-level (installed once via `workflow setup`):
         └── HANDOFF.md
 ~/.claude/
 └── commands/
-    └── simply.md             # Symlink to workflow repo simply.md
+    └── simply.md             # Symlink to ~/.simply/simply.md
 ```
 
-Per-project (via `workflow install`):
+Per-project (via `/simply init`):
 ```
 your-project/
 ├── docs/
@@ -67,6 +74,23 @@ your-project/
 ## Commands
 
 Use `/simply <action>` to manage phases.
+
+### init
+
+Initialize Simply workflow in current project.
+1. Check if `docs/simply.yaml` exists - if so, report current state and exit
+2. Ask for project name (default: directory name)
+3. Create `docs/simply.yaml`:
+   ```yaml
+   project: {project-name}
+   version: "0.1"
+   phase: "01"
+   ```
+4. Create version directory: `docs/{project}/0.1/`
+5. Copy version templates from `~/.simply/templates/version/` to version directory
+6. Create phase directory: `docs/{project}/0.1/phases/01/`
+7. Copy phase templates from `~/.simply/templates/phase/` to phase directory
+8. Confirm setup complete
 
 ### status
 
@@ -115,11 +139,14 @@ Switch to different phase.
 
 ## Starting a New Phase
 
-1. Create `docs/{project}/{version}/phases/{NN}/`
-2. Copy templates from `~/.simply/templates/phase/`
-3. Copy phase overview from ROADMAP.md to TASKS.md
-4. Read previous HANDOFF.md for context
-5. Update `docs/simply.yaml`
+1. Create phase directory: `docs/{project}/{version}/phases/{NN}/`
+2. Copy all files from `~/.simply/templates/phase/` to the new phase directory:
+   - `TASKS.md`
+   - `JOURNAL.md`
+   - `HANDOFF.md`
+3. Copy phase overview from ROADMAP.md into TASKS.md
+4. Read previous phase's HANDOFF.md for context
+5. Update `docs/simply.yaml` with new phase number
 
 ## Phase Transitions
 
