@@ -3,5 +3,6 @@
   "version": "0.1.0",
   "description": "Development workflow system for managing phases, tasks, and project state",
   "author": "simplychris",
-  "keywords": ["workflow", "phases", "tasks", "jj"]
+  "keywords": ["workflow", "phases", "tasks", "jj"],
+  "hooks": "./hooks/hooks.json"
 }

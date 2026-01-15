@@ -1,6 +1,7 @@
 ---
 description: Development workflow system for managing phases, tasks, and project state
 argument-hint: <action> [args]
+allowed-tools: Bash(jj:*), Read, Write, Edit, Glob
 ---
 
 # Simply
