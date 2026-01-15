@@ -135,6 +135,27 @@ Switch to different phase.
 2. Update `docs/simply.yaml`
 3. Load new phase context
 
+### commit
+
+Review open changes and create meaningful atomic commits.
+1. Run `jj status` and `jj diff` to see all uncommitted changes
+2. Analyze changes and group them into logical, self-contained units:
+   - Each commit should represent one coherent change (feature, fix, refactor)
+   - Related files should be committed together
+   - Unrelated changes should be separate commits
+3. For each logical group:
+   - Use `jj commit` with only the relevant files
+   - Write a clear, concise commit message describing the "why"
+   - Message format: imperative mood, 50 char summary line
+4. Continue until all changes are committed
+5. Report summary of commits created
+
+Commit principles:
+- Atomic: Each commit is one logical change that compiles independently
+- Self-contained: Commit includes all files needed for that change
+- Meaningful: Message explains purpose, not just what changed
+- Ordered: Dependencies committed before dependents
+
 ---
 
 ## Starting a New Phase
