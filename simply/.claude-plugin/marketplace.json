@@ -1,0 +1,13 @@
+{
+  "name": "simply-marketplace",
+  "owner": {
+    "name": "simplychris"
+  },
+  "plugins": [
+    {
+      "name": "simply",
+      "source": "./plugin",
+      "description": "Development workflow system for managing phases, tasks, and project state"
+    }
+  ]
+}

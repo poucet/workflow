@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install Simply plugin at user level
+# Install Simply plugin using Claude Code CLI
 
 # Get the directory where this script lives
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -7,28 +7,31 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "Setting up Simply plugin..."
 echo "From: $SCRIPT_DIR"
 
-# Create ~/.claude/plugins/
-mkdir -p "$HOME/.claude/plugins"
-
-# Symlink simply/ directory to ~/.claude/plugins/simply
-if [[ -L "$HOME/.claude/plugins/simply" ]]; then
-    rm "$HOME/.claude/plugins/simply"
-elif [[ -d "$HOME/.claude/plugins/simply" ]]; then
-    echo "Error: ~/.claude/plugins/simply exists and is not a symlink"
-    exit 1
-fi
-ln -s "$SCRIPT_DIR" "$HOME/.claude/plugins/simply"
-echo "✓ Linked ~/.claude/plugins/simply/"
-
-# Keep ~/.simply for templates access
+# Symlink ~/.simply for templates access
 if [[ -L "$HOME/.simply" ]]; then
     rm "$HOME/.simply"
 fi
 ln -s "$SCRIPT_DIR" "$HOME/.simply"
-echo "✓ Linked ~/.simply/ (for templates)"
+echo "✓ Linked ~/.simply/"
+
+# Uninstall existing plugin and marketplace
+claude plugin uninstall simply 2>/dev/null
+claude plugin marketplace remove simply-marketplace 2>/dev/null
+
+# Add simply dir as marketplace (contains .claude-plugin/marketplace.json)
+claude plugin marketplace add "$SCRIPT_DIR"
+claude plugin install simply
+
+# Replace cached plugin with symlink for live development
+CACHE_DIR="$HOME/.claude/plugins/cache/simply-marketplace/simply/0.1.0"
+if [[ -d "$CACHE_DIR" && ! -L "$CACHE_DIR" ]]; then
+    rm -rf "$CACHE_DIR"
+    ln -s "$HOME/.simply/plugin" "$CACHE_DIR"
+    echo "✓ Linked cache to ~/.simply/plugin"
+fi
 
 echo ""
 echo "✓ Simply plugin installed!"
 echo ""
 echo "Next steps:"
-echo "  Use '/simply init' in any project to initialize the workflow"
+echo "  Restart Claude Code, then use '/simply:do' in any project"

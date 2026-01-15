@@ -2,7 +2,10 @@
   "name": "simply",
   "version": "0.1.0",
   "description": "Development workflow system for managing phases, tasks, and project state",
-  "author": "simplychris",
+  "author": {
+    "name": "simplychris"
+  },
   "keywords": ["workflow", "phases", "tasks", "jj"],
+  "commands": "./commands",
   "hooks": "./hooks/hooks.json"
 }
