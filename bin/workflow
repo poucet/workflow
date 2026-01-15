@@ -90,47 +90,101 @@ _jj_workspace_setup() {
     fi
 }
 
+# Get the workflow repo directory (where this script lives)
+_workflow_repo_root() {
+    local script_path="${BASH_SOURCE[0]}"
+    # Resolve symlinks
+    while [ -L "$script_path" ]; do
+        script_path="$(readlink "$script_path")"
+    done
+    # Go up from bin/ to repo root
+    dirname "$(dirname "$(cd "$(dirname "$script_path")" && pwd)/$(basename "$script_path")")"
+}
+
 # ============================================================================
 # Subcommands
 # ============================================================================
 
-workflow_init() {
-    # Check if already a jj repo
-    if [ -d ".jj" ]; then
-        echo "Already a jj repository"
-        return 0
+workflow_install() {
+    local workflow_repo="$(_workflow_repo_root)"
+    local target_dir="$(pwd)"
+
+    echo "Installing Simply workflow into: $target_dir"
+    echo "From workflow repo: $workflow_repo"
+
+    # Check if target is a git or jj repo
+    if [[ ! -d "$target_dir/.git" && ! -d "$target_dir/.jj" ]]; then
+        echo "Warning: Target is not a git or jj repository"
+        read -p "Continue anyway? [y/N] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            return 1
+        fi
     fi
 
-    # Check if it's a git repo
-    if [ ! -d ".git" ]; then
-        echo "Error: Not a git repository"
-        return 1
+    # Create simply/ symlink
+    if [[ -e "$target_dir/simply" ]]; then
+        echo "simply/ already exists, skipping"
+    else
+        ln -s "$workflow_repo/simply" "$target_dir/simply"
+        echo "✓ Created symlink: simply/ -> $workflow_repo/simply"
     fi
 
-    echo "Converting git repo to jj (colocated)..."
-
-    # Initialize jj in colocated mode
-    jj git init --colocate
-
-    # Create main bookmark pointing to current HEAD
-    jj bookmark create main -r @-
+    # Add simply and .jj-workspaces to .gitignore
+    local gitignore_entries=("simply" ".jj-workspaces")
+    for entry in "${gitignore_entries[@]}"; do
+        if [[ -f "$target_dir/.gitignore" ]]; then
+            if ! grep -q "^${entry}$" "$target_dir/.gitignore"; then
+                echo "$entry" >> "$target_dir/.gitignore"
+                echo "✓ Added $entry to .gitignore"
+            fi
+        else
+            echo "$entry" > "$target_dir/.gitignore"
+            echo "✓ Created .gitignore with $entry"
+        fi
+    done
 
     # Create .jj-workspaces directory
-    mkdir -p .jj-workspaces
+    mkdir -p "$target_dir/.jj-workspaces"
+    echo "✓ Created .jj-workspaces directory"
 
-    # Add .jj-workspaces to .gitignore if not already there
-    if [ -f ".gitignore" ]; then
-        if ! grep -q "^\.jj-workspaces" .gitignore; then
-            echo ".jj-workspaces" >> .gitignore
-            echo "  Added .jj-workspaces to .gitignore"
-        fi
+    # Create .claude directory structure
+    mkdir -p "$target_dir/.claude/commands"
+
+    # Copy .claude files (don't overwrite existing CLAUDE.md)
+    if [[ -e "$target_dir/.claude/CLAUDE.md" ]]; then
+        echo ".claude/CLAUDE.md already exists, skipping"
     else
-        echo ".jj-workspaces" > .gitignore
-        echo "  Created .gitignore with .jj-workspaces"
+        cp "$workflow_repo/.claude/CLAUDE.md" "$target_dir/.claude/CLAUDE.md"
+        echo "✓ Created .claude/CLAUDE.md"
     fi
 
-    echo "✓ Initialized jj repository (colocated with git)"
-    echo "  Main bookmark set to current HEAD"
+    # Copy commands
+    cp "$workflow_repo/.claude/commands/simply.md" "$target_dir/.claude/commands/simply.md"
+    echo "✓ Created .claude/commands/simply.md"
+
+    # Create docs directory with initial simply.yaml
+    mkdir -p "$target_dir/docs"
+    if [[ -e "$target_dir/docs/simply.yaml" ]]; then
+        echo "docs/simply.yaml already exists, skipping"
+    else
+        local project_name="$(basename "$target_dir")"
+        cat > "$target_dir/docs/simply.yaml" << EOF
+# Simply workflow state
+project: $project_name
+version: "0.1"
+phase: "01"
+EOF
+        echo "✓ Created docs/simply.yaml"
+    fi
+
+    echo ""
+    echo "✓ Simply installed successfully!"
+    echo ""
+    echo "Next steps:"
+    echo "  1. Edit docs/simply.yaml to set your project/version/phase"
+    echo "  2. Create your first phase: docs/{project}/{version}/phases/01/"
+    echo "  3. Use /simply status to check workflow state"
 }
 
 workflow_create() {
@@ -383,7 +437,7 @@ workflow_help() {
     cat <<EOF
 Jujutsu workflow commands:
 
-  workflow init                      Convert git repo to jj (colocated)
+  workflow install                   Install Simply workflow into current repo
   workflow create <name>             Create workspace, open in VSCode
   workflow open <name>               Open existing workspace in VSCode
   workflow merge <name> [commits...] Merge workspace into main
@@ -427,7 +481,7 @@ EOF
 
 # Export list of available commands (for meta-wrapper discovery)
 workflow_commands() {
-    echo "init create open merge sync linearize flatten delete workspaces files help"
+    echo "install create open merge sync linearize flatten delete workspaces files help"
 }
 
 # ============================================================================
@@ -488,7 +542,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         complete)
             workflow_complete "$@"
             ;;
-        init|create|open|merge|sync|linearize|flatten|delete|workspaces|files|help)
+        install|create|open|merge|sync|linearize|flatten|delete|workspaces|files|help)
             "workflow_$cmd" "$@"
             ;;
         *)
