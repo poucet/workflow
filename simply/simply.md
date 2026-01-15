@@ -5,75 +5,34 @@ argument-hint: <action> [args]
 
 # Simply
 
-Development workflow system for Claude Code.
+Read state from `docs/simply.yaml`: project, version, phase
 
-## Current State
+## Structure
 
-Read from `docs/simply.yaml`:
-- `project` - project directory under docs/
-- `version` - current version
-- `phase` - current phase
-
-## Directory Structure
-
-User-level (installed once via `simply/setup.sh`):
 ```
-~/.simply/                    # Symlink to workflow repo simply/
-├── simply.md
-├── setup.sh
-└── templates/
-    ├── version/
-    │   ├── ROADMAP.md
-    │   └── IDEAS.md
-    └── phase/
-        ├── TASKS.md
-        ├── JOURNAL.md
-        └── HANDOFF.md
-~/.claude/
-└── commands/
-    └── simply.md             # Symlink to ~/.simply/simply.md
+docs/
+├── simply.yaml
+└── {project}/{version}/
+    ├── ROADMAP.md, IDEAS.md
+    └── phases/{phase}/
+        ├── TASKS.md, JOURNAL.md, HANDOFF.md
 ```
 
-Per-project (via `/simply init`):
-```
-your-project/
-├── docs/
-│   ├── simply.yaml           # Current state
-│   └── {project}/
-│       └── {version}/
-│           ├── ROADMAP.md
-│           ├── IDEAS.md
-│           └── phases/{phase}/
-│               ├── TASKS.md
-│               ├── JOURNAL.md
-│               └── HANDOFF.md
-└── .jj-workspaces/           # jj workspaces (gitignored)
-```
+Templates: `~/.simply/templates/version/` and `~/.simply/templates/phase/`
 
-## Phase Files
+## Files
 
-| File | Purpose | When to Update |
-|------|---------|----------------|
-| `TASKS.md` | Task table + feature specs | Mark tasks done, add new tasks |
-| `JOURNAL.md` | Chronological log & notes | During work (Thoughts, Changes, Obs) |
-| `HANDOFF.md` | Context for next phase | At end of phase |
-
-## Path Resolution
-
-| Resource | Path |
-|----------|------|
-| State | `docs/simply.yaml` |
-| Roadmap | `docs/{project}/{version}/ROADMAP.md` |
-| Ideas | `docs/{project}/{version}/IDEAS.md` |
-| Phase dir | `docs/{project}/{version}/phases/{phase}/` |
-| Version templates | `~/.simply/templates/version/` |
-| Phase templates | `~/.simply/templates/phase/` |
+| File | Purpose |
+|------|---------|
+| `ROADMAP.md` | Phase overview and goals |
+| `IDEAS.md` | Idea inbox |
+| `TASKS.md` | Task table + specs |
+| `JOURNAL.md` | Session log |
+| `HANDOFF.md` | Context for next phase |
 
 ---
 
 ## Commands
-
-Use `/simply <action>` to manage phases.
 
 ### init
 
@@ -86,16 +45,13 @@ Initialize Simply workflow in current project.
    version: "0.1"
    phase: "01"
    ```
-4. Create version directory: `docs/{project}/0.1/`
-5. Copy version templates from `~/.simply/templates/version/` to version directory
-6. Create phase directory: `docs/{project}/0.1/phases/01/`
-7. Copy phase templates from `~/.simply/templates/phase/` to phase directory
-8. Confirm setup complete
+4. Create `docs/{project}/0.1/` and copy version templates
+5. Create `docs/{project}/0.1/phases/01/` and copy phase templates
 
 ### status
 
 Show current phase status.
-1. Read this file for current state
+1. Read simply.yaml for current state
 2. Read TASKS.md for task counts
 3. Report summary
 
@@ -131,7 +87,7 @@ Prepare HANDOFF.md for phase end.
 ### switch <phase>
 
 Switch to different phase.
-1. Create phase dir if needed (from templates)
+1. Create phase dir if needed (copy from templates)
 2. Update `docs/simply.yaml`
 3. Load new phase context
 
@@ -139,39 +95,8 @@ Switch to different phase.
 
 Review open changes and create meaningful atomic commits.
 1. Run `jj status` and `jj diff` to see all uncommitted changes
-2. Analyze changes and group them into logical, self-contained units:
-   - Each commit should represent one coherent change (feature, fix, refactor)
-   - Related files should be committed together
-   - Unrelated changes should be separate commits
-3. For each logical group:
-   - Use `jj commit` with only the relevant files
-   - Write a clear, concise commit message describing the "why"
-   - Message format: imperative mood, 50 char summary line
-4. Continue until all changes are committed
-5. Report summary of commits created
-
-Commit principles:
-- Atomic: Each commit is one logical change that compiles independently
-- Self-contained: Commit includes all files needed for that change
-- Meaningful: Message explains purpose, not just what changed
-- Ordered: Dependencies committed before dependents
-
----
-
-## Starting a New Phase
-
-1. Create phase directory: `docs/{project}/{version}/phases/{NN}/`
-2. Copy all files from `~/.simply/templates/phase/` to the new phase directory:
-   - `TASKS.md`
-   - `JOURNAL.md`
-   - `HANDOFF.md`
-3. Copy phase overview from ROADMAP.md into TASKS.md
-4. Read previous phase's HANDOFF.md for context
-5. Update `docs/simply.yaml` with new phase number
-
-## Phase Transitions
-
-When completing a phase:
-1. Update TASKS.md with final status
-2. Capture learnings and context in HANDOFF.md
-3. Update `docs/simply.yaml` for next phase
+2. Group changes into logical, self-contained units:
+   - Each commit = one coherent change (feature, fix, refactor)
+   - Related files together, unrelated changes separate
+3. For each group: `jj commit` with clear message (imperative, ~50 chars)
+4. Report summary of commits created
