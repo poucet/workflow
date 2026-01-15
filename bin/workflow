@@ -105,12 +105,43 @@ _workflow_repo_root() {
 # Subcommands
 # ============================================================================
 
-workflow_install() {
+workflow_setup() {
     local workflow_repo="$(_workflow_repo_root)"
+
+    echo "Setting up Simply workflow at user level..."
+    echo "From workflow repo: $workflow_repo"
+
+    # Create ~/.simply/ directory
+    mkdir -p "$HOME/.simply"
+
+    # Symlink templates
+    if [[ -L "$HOME/.simply/templates" ]]; then
+        rm "$HOME/.simply/templates"
+    fi
+    ln -s "$workflow_repo/simply/templates" "$HOME/.simply/templates"
+    echo "✓ Linked ~/.simply/templates/ -> $workflow_repo/simply/templates"
+
+    # Create ~/.claude/commands/
+    mkdir -p "$HOME/.claude/commands"
+
+    # Symlink simply.md command
+    if [[ -L "$HOME/.claude/commands/simply.md" ]]; then
+        rm "$HOME/.claude/commands/simply.md"
+    fi
+    ln -s "$workflow_repo/simply/simply.md" "$HOME/.claude/commands/simply.md"
+    echo "✓ Linked ~/.claude/commands/simply.md -> $workflow_repo/simply/simply.md"
+
+    echo ""
+    echo "✓ Simply workflow installed at user level!"
+    echo ""
+    echo "Next steps:"
+    echo "  Run 'workflow install' in any project to set up project state"
+}
+
+workflow_install() {
     local target_dir="$(pwd)"
 
     echo "Installing Simply workflow into: $target_dir"
-    echo "From workflow repo: $workflow_repo"
 
     # Check if target is a git or jj repo
     if [[ ! -d "$target_dir/.git" && ! -d "$target_dir/.jj" ]]; then
@@ -122,46 +153,20 @@ workflow_install() {
         fi
     fi
 
-    # Create simply/ symlink
-    if [[ -e "$target_dir/simply" ]]; then
-        echo "simply/ already exists, skipping"
-    else
-        ln -s "$workflow_repo/simply" "$target_dir/simply"
-        echo "✓ Created symlink: simply/ -> $workflow_repo/simply"
-    fi
-
-    # Add simply and .jj-workspaces to .gitignore
-    local gitignore_entries=("simply" ".jj-workspaces")
-    for entry in "${gitignore_entries[@]}"; do
-        if [[ -f "$target_dir/.gitignore" ]]; then
-            if ! grep -q "^${entry}$" "$target_dir/.gitignore"; then
-                echo "$entry" >> "$target_dir/.gitignore"
-                echo "✓ Added $entry to .gitignore"
-            fi
-        else
-            echo "$entry" > "$target_dir/.gitignore"
-            echo "✓ Created .gitignore with $entry"
+    # Add .jj-workspaces to .gitignore
+    if [[ -f "$target_dir/.gitignore" ]]; then
+        if ! grep -q "^\.jj-workspaces$" "$target_dir/.gitignore"; then
+            echo ".jj-workspaces" >> "$target_dir/.gitignore"
+            echo "✓ Added .jj-workspaces to .gitignore"
         fi
-    done
+    else
+        echo ".jj-workspaces" > "$target_dir/.gitignore"
+        echo "✓ Created .gitignore with .jj-workspaces"
+    fi
 
     # Create .jj-workspaces directory
     mkdir -p "$target_dir/.jj-workspaces"
     echo "✓ Created .jj-workspaces directory"
-
-    # Create .claude directory structure
-    mkdir -p "$target_dir/.claude/commands"
-
-    # Copy .claude files (don't overwrite existing CLAUDE.md)
-    if [[ -e "$target_dir/.claude/CLAUDE.md" ]]; then
-        echo ".claude/CLAUDE.md already exists, skipping"
-    else
-        cp "$workflow_repo/.claude/CLAUDE.md" "$target_dir/.claude/CLAUDE.md"
-        echo "✓ Created .claude/CLAUDE.md"
-    fi
-
-    # Copy commands
-    cp "$workflow_repo/.claude/commands/simply.md" "$target_dir/.claude/commands/simply.md"
-    echo "✓ Created .claude/commands/simply.md"
 
     # Create docs directory with initial simply.yaml
     mkdir -p "$target_dir/docs"
@@ -179,7 +184,7 @@ EOF
     fi
 
     echo ""
-    echo "✓ Simply installed successfully!"
+    echo "✓ Simply installed in project!"
     echo ""
     echo "Next steps:"
     echo "  1. Edit docs/simply.yaml to set your project/version/phase"
@@ -437,7 +442,8 @@ workflow_help() {
     cat <<EOF
 Jujutsu workflow commands:
 
-  workflow install                   Install Simply workflow into current repo
+  workflow setup                     Install Simply at user level (run once)
+  workflow install                   Set up Simply in current project
   workflow create <name>             Create workspace, open in VSCode
   workflow open <name>               Open existing workspace in VSCode
   workflow merge <name> [commits...] Merge workspace into main
@@ -481,7 +487,7 @@ EOF
 
 # Export list of available commands (for meta-wrapper discovery)
 workflow_commands() {
-    echo "install create open merge sync linearize flatten delete workspaces files help"
+    echo "setup install create open merge sync linearize flatten delete workspaces files help"
 }
 
 # ============================================================================
@@ -542,7 +548,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         complete)
             workflow_complete "$@"
             ;;
-        install|create|open|merge|sync|linearize|flatten|delete|workspaces|files|help)
+        setup|install|create|open|merge|sync|linearize|flatten|delete|workspaces|files|help)
             "workflow_$cmd" "$@"
             ;;
         *)

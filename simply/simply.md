@@ -11,33 +11,36 @@ Read from `docs/simply.yaml`:
 
 ## Directory Structure
 
+User-level (installed once via `workflow setup`):
+```
+~/.simply/
+└── templates/                # Symlink to workflow repo templates
+    ├── version/
+    │   ├── ROADMAP.md
+    │   └── IDEAS.md
+    └── phase/
+        ├── TASKS.md
+        ├── JOURNAL.md
+        └── HANDOFF.md
+~/.claude/
+└── commands/
+    └── simply.md             # Symlink to workflow repo simply.md
+```
+
+Per-project (via `workflow install`):
 ```
 your-project/
-├── simply/                   # Symlink to workflow repo
-│   ├── simply.md
-│   └── templates/
-│       ├── version/
-│       │   ├── ROADMAP.md
-│       │   └── IDEAS.md
-│       └── phase/
-│           ├── TASKS.md
-│           ├── JOURNAL.md
-│           └── HANDOFF.md
-├── .claude/                  # Claude configuration (copied)
-│   ├── CLAUDE.md
-│   ├── commands/simply.md
-│   ├── hooks/pre-compact.sh
-│   └── settings.local.json
-└── docs/
-    ├── simply.yaml           # Current state
-    └── {project}/
-        └── {version}/
-            ├── ROADMAP.md
-            ├── IDEAS.md
-            └── phases/{phase}/
-                ├── TASKS.md
-                ├── JOURNAL.md
-                └── HANDOFF.md
+├── docs/
+│   ├── simply.yaml           # Current state
+│   └── {project}/
+│       └── {version}/
+│           ├── ROADMAP.md
+│           ├── IDEAS.md
+│           └── phases/{phase}/
+│               ├── TASKS.md
+│               ├── JOURNAL.md
+│               └── HANDOFF.md
+└── .jj-workspaces/           # jj workspaces (gitignored)
 ```
 
 ## Phase Files
@@ -56,8 +59,8 @@ your-project/
 | Roadmap | `docs/{project}/{version}/ROADMAP.md` |
 | Ideas | `docs/{project}/{version}/IDEAS.md` |
 | Phase dir | `docs/{project}/{version}/phases/{phase}/` |
-| Version templates | `simply/templates/version/` |
-| Phase templates | `simply/templates/phase/` |
+| Version templates | `~/.simply/templates/version/` |
+| Phase templates | `~/.simply/templates/phase/` |
 
 ---
 
@@ -110,18 +113,10 @@ Switch to different phase.
 
 ---
 
-## Pre-Compact
-
-Before compacting, update current phase docs:
-- `JOURNAL.md` - Changes and notes from this session
-- `TASKS.md` - Task status updates
-
----
-
 ## Starting a New Phase
 
 1. Create `docs/{project}/{version}/phases/{NN}/`
-2. Copy templates from `simply/templates/phase/`
+2. Copy templates from `~/.simply/templates/phase/`
 3. Copy phase overview from ROADMAP.md to TASKS.md
 4. Read previous HANDOFF.md for context
 5. Update `docs/simply.yaml`
