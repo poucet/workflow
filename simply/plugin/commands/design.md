@@ -13,6 +13,8 @@ Collaboratively develop a design document. Can start from an idea or continue an
 Read `docs/simply.yaml` for: project, version, phase
 Version path: `docs/{project}/{version}/`
 
+**Bootstrap**: Read ARCHITECTURE.md first if it exists — this gives you codebase context without scanning files.
+
 ## Approach
 
 This is a **collaborative conversation**, not a form to fill out. Design happens iteratively across multiple sessions. Guide the user through problem discovery. Ask one or two questions at a time. Validate understanding before moving on.

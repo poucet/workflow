@@ -14,6 +14,8 @@ Read `docs/simply.yaml` for: project, version, phase
 Phase path: `docs/{project}/{version}/phases/{phase}/`
 Templates: `~/.simply/templates/`
 
+**Bootstrap**: Read ARCHITECTURE.md first if it exists — this gives you codebase context without scanning files.
+
 ## Steps
 
 1. **Check state**: Read `docs/simply.yaml`

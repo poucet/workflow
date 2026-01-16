@@ -26,6 +26,7 @@ Phase path: `docs/{project}/{version}/phases/{phase}/`
      /simply:plan <design#>  Map design to roadmap and tasks
      /simply:next [phase]    Start next task or switch phase
      /simply:status          Show this status
+     /simply:summarize       Update architecture summary
      /simply:commit          Create atomic commits
      /simply:journal <text>  Add session note
 
