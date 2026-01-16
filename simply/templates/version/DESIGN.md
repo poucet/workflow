@@ -22,8 +22,12 @@
 **Non-Goals**:
 - {What this explicitly does NOT cover}
 
+**Patterns**:
+- Related to: {Design #X, Idea #Y — if this generalizes or relates to others}
+- Shared abstraction: {If multiple problems solved by one approach}
+
 **Proposed Solution**:
-{Detailed technical approach}
+{High-level approach, not implementation details}
 
 **Alternatives Considered**:
 1. {Alternative 1}: {Why rejected}
