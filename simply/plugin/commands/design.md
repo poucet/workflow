@@ -1,12 +1,12 @@
 ---
-description: Collaboratively develop design from idea
-argument-hint: <idea#>
+description: Develop or continue a design conversation
+argument-hint: <idea# or design#>
 allowed-tools: Bash(jj:*), Read, Write, Edit, Glob
 ---
 
 # Simply Design
 
-Collaboratively develop a design document from an idea. Focus on understanding the problem deeply before discussing solutions.
+Collaboratively develop a design document. Can start from an idea or continue an existing design.
 
 ## Context
 
@@ -15,11 +15,19 @@ Version path: `docs/{project}/{version}/`
 
 ## Approach
 
-This is a **collaborative conversation**, not a form to fill out. Guide the user through problem discovery. Ask one or two questions at a time. Validate understanding before moving on.
+This is a **collaborative conversation**, not a form to fill out. Design happens iteratively across multiple sessions. Guide the user through problem discovery. Ask one or two questions at a time. Validate understanding before moving on.
+
+**Checkpoint often** — save progress to DESIGN.md even if incomplete. Use status to track:
+- `draft` — still exploring the problem
+- `refined` — problem clear, exploring approaches
+- `approved` — ready for `/simply:plan`
 
 ## Steps
 
-1. **Select idea**: Take idea number from args or show Inbox and ask which to explore
+1. **Select or resume**:
+   - If arg is idea#: start new design from that idea
+   - If arg is design#: resume that design, review where we left off
+   - If no arg: show ideas inbox AND draft/refined designs, ask what to work on
 
 2. **Understand the problem** (ask iteratively):
    - "What problem are you trying to solve?"

@@ -1,11 +1,11 @@
 ---
-description: Show phase status and next task
+description: Show workflow status and available commands
 allowed-tools: Read, Glob
 ---
 
 # Simply Status
 
-Show current phase status and suggest next task.
+Show current workflow status. If not initialized, show help.
 
 ## Context
 
@@ -14,8 +14,27 @@ Phase path: `docs/{project}/{version}/phases/{phase}/`
 
 ## Steps
 
-1. Read simply.yaml for current state
-2. Read TASKS.md for task counts (todo/doing/done)
-3. Report summary: project, version, phase, task breakdown
-4. Find next `todo` task by priority (P0 > P1 > P2 > P3)
-5. If found, present task details and ask if ready to start
+1. **Check state**: Try to read `docs/simply.yaml`
+
+2. **If not initialized**, show help:
+   ```
+   Simply Workflow — turn ideas into working software.
+
+   Commands:
+     /simply:idea <text>     Capture idea to inbox
+     /simply:design [#]      Develop or continue a design
+     /simply:plan <design#>  Map design to roadmap and tasks
+     /simply:next [phase]    Start next task or switch phase
+     /simply:status          Show this status
+     /simply:commit          Create atomic commits
+     /simply:journal <text>  Add session note
+
+   Run /simply:next to initialize a new project.
+   ```
+
+3. **If initialized**, show status:
+   - Project, version, phase
+   - Task counts: ⬜ todo / 🔄 in-progress / ✅ done
+   - Ideas in inbox (count)
+   - Designs in progress (draft/refined count)
+   - Next suggested action
