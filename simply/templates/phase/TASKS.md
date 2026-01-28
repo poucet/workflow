@@ -8,16 +8,16 @@
 
 | Status | Pri | Task | Description |
 |--------|-----|------|-------------|
-| ⬜ | P0 | [{NN}.1](#nn1-feature-name) | {Feature description} |
-| ⬜ | P1 | [{NN}.2](#nn2-feature-name) | {Feature description} |
+| ⬜ | P0 | [{NN}.1](#nn1-task-name) | {Task description} |
+| ⬜ | P1 | [{NN}.2](#nn2-task-name) | {Task description} |
 
 Status: ⬜ todo, 🔄 in-progress, ✅ done, 🚫 blocked, ⏸️ deferred
 
 ---
 
-## Feature Details
+## Task Details
 
-### Feature {#}: {Name}
+### {NN}.1: {Task Name}
 
 **Problem**: {What problem does this solve?}
 

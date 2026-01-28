@@ -23,6 +23,7 @@ This is a **collaborative conversation**, not a form to fill out. Design happens
 - `draft` — still exploring the problem
 - `refined` — problem clear, exploring approaches
 - `approved` — ready for `/simply:plan`
+- `planned` — mapped to roadmap and tasks
 
 ## Steps
 

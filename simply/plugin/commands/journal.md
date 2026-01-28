@@ -17,4 +17,6 @@ Phase path: `docs/{project}/{version}/phases/{phase}/`
 
 1. Take text from args or ask for it
 2. Append entry with timestamp to JOURNAL.md
-3. Confirm entry added
+3. Ask if ready to commit (journal entries are often made mid-work)
+4. If yes: `jj commit` with only JOURNAL.md
+5. Confirm entry added

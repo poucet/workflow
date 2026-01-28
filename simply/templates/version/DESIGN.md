@@ -37,7 +37,7 @@
 - [ ] {Question 1}
 - [ ] {Question 2}
 
-**Status**: draft / approved / implemented
+**Status**: draft / refined / approved / planned
 
 ---
 
@@ -45,4 +45,4 @@
 
 | # | Name | From Idea | Status | Notes |
 |---|------|-----------|--------|-------|
-| | | | draft | |
+| | | | | |

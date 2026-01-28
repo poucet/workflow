@@ -36,6 +36,22 @@ Templates: `~/.simply/templates/`
 
 4. **If no arg**: Find next task
    - Read TASKS.md for current phase
+   - Check for in-progress tasks first
    - Find next `todo` task by priority (P0 > P1 > P2)
    - If no tasks remain: ask if ready to switch to next phase
    - Present task details and ask if ready to start
+
+5. **When starting a task**:
+   - Update TASKS.md: change status from ⬜ to 🔄
+   - `jj commit` with TASKS.md update
+   - Show task details and acceptance criteria
+
+6. **When finishing a task** (user says "done" or similar):
+   - Verify acceptance criteria are met
+   - Update TASKS.md: change status from 🔄 to ✅
+   - `jj commit` with TASKS.md update
+   - Suggest `/simply:next` for the next task
+
+7. **If task is blocked**:
+   - Update TASKS.md: change status to 🚫, add note
+   - Ask what's blocking and if there's a different task to start
