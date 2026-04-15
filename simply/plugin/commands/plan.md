@@ -10,7 +10,7 @@ Map approved designs to the roadmap and break them down into actionable tasks.
 
 ## Context
 
-Read `docs/simply.yaml` for: project, version, phase
+Read frontmatter from `docs/PROJECT.md` for: project, version, phase
 Version path: `docs/{project}/{version}/`
 Phase path: `docs/{project}/{version}/phases/{phase}/`
 
@@ -43,6 +43,7 @@ Use this command when a design is ready to be scheduled and broken down:
    - Add feature to ROADMAP.md in the target phase
    - Create/update phase TASKS.md with the tasks
    - Update design status to "planned"
+   - If this design originated from an idea, flip the idea's status in IDEAS.md to ✅ (done — rolled into roadmap)
    - Run `jj commit` with changed files
 
 6. **Confirm**: Show summary of what was planned and where

@@ -10,10 +10,10 @@ Collaboratively develop a design document. Can start from an idea or continue an
 
 ## Context
 
-Read `docs/simply.yaml` for: project, version, phase
+Read frontmatter from `docs/PROJECT.md` for: project, version, phase
 Version path: `docs/{project}/{version}/`
 
-**Bootstrap**: Read ARCHITECTURE.md first if it exists — this gives you codebase context without scanning files.
+**Bootstrap**: PROJECT.md's Architecture section is auto-loaded on session start — use it for codebase context without scanning files.
 
 ## Approach
 
@@ -30,7 +30,7 @@ This is a **collaborative conversation**, not a form to fill out. Design happens
 1. **Select or resume**:
    - If arg is idea#: start new design from that idea
    - If arg is design#: resume that design, review where we left off
-   - If no arg: show ideas inbox AND draft/refined designs, ask what to work on
+   - If no arg: show ideas (💡 idea / 🎯 ready) AND draft/refined designs, ask what to work on
 
 2. **Understand the problem** (ask iteratively):
    - "What problem are you trying to solve?"
@@ -67,8 +67,8 @@ This is a **collaborative conversation**, not a form to fill out. Design happens
    - Status: "draft"
 
 7. **Update artifacts**:
-   - Move idea from Inbox to Triaged in IDEAS.md
-   - Update Design Index table
+   - Update the idea's status in IDEAS.md: 💡 → 🔄 (in progress) while the design is active, or 🗑️ if rejected
+   - Update Design Index table in DESIGN.md
    - Run `jj commit` with IDEAS.md and DESIGN.md
 
 8. **Confirm**: Summarize what was captured and suggest next steps

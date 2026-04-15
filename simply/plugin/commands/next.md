@@ -10,27 +10,30 @@ Navigate work: start next task, switch phases, or initialize the workflow.
 
 ## Context
 
-Read `docs/simply.yaml` for: project, version, phase
+Read frontmatter from `docs/PROJECT.md` for: project, version, phase
 Phase path: `docs/{project}/{version}/phases/{phase}/`
 Templates: `~/.simply/templates/`
 
-**Bootstrap**: Read ARCHITECTURE.md first if it exists — this gives you codebase context without scanning files.
+**Bootstrap**: PROJECT.md is auto-loaded on session start, including its Architecture section — so you already have codebase context without scanning files. If that section looks stale relative to the current codebase (e.g., new top-level directories, changed component graph), offer to refresh it.
 
 ## Steps
 
-1. **Check state**: Read `docs/simply.yaml`
+1. **Check state**: Read `docs/PROJECT.md` frontmatter
 
 2. **If not initialized**:
    - Ask for project name (default: directory name)
-   - Create `docs/simply.yaml` with project, version: "0.1", phase: "01"
+   - Create `docs/PROJECT.md` from `~/.simply/templates/PROJECT.md` with frontmatter `project`, `version: "0.1"`, `phase: "01"` and a starter body (problem / current focus / notes)
    - Create version dir and copy templates from `~/.simply/templates/version/`
    - Create phase dir and copy templates from `~/.simply/templates/phase/`
    - Confirm setup complete
 
 3. **If arg is a phase number**: Switch to that phase
-   - Prepare HANDOFF.md for current phase (summarize completed work, open items)
    - Create new phase dir if needed (copy from templates)
-   - Update `docs/simply.yaml` with new phase
+   - Build a recap from the current phase and **prepend** it to the new phase's JOURNAL.md as a `## Previous Phase Recap (Phase {old} → {new})` section containing:
+     - Open / in-progress / blocked tasks from the old phase's TASKS.md (status + title)
+     - Last 3–5 entries from the old phase's JOURNAL.md
+     - Any unresolved decisions or risks worth carrying forward
+   - Update `docs/PROJECT.md` frontmatter with the new phase
    - Run `jj commit` with changed files
    - Show new phase status
 
@@ -49,7 +52,7 @@ Templates: `~/.simply/templates/`
 6. **When finishing a task** (user says "done" or similar):
    - Verify acceptance criteria are met
    - Update TASKS.md: change status from 🔄 to ✅
-   - `jj commit` with TASKS.md update
+   - **Auto-commit**: if there are uncommitted code changes beyond TASKS.md, run `jj commit` with a templated message `Phase {NN}: Task {X.Y}: {task name}` bundling the code + TASKS.md update. If only TASKS.md changed, commit just that. Skip the commit only if the user explicitly says not to.
    - Suggest `/simply:next` for the next task
 
 7. **If task is blocked**:

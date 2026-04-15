@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -f docs/simply.yaml ] && cat docs/simply.yaml || true"
+            "command": "[ -f docs/PROJECT.md ] && cat docs/PROJECT.md || true"
           }
         ]
       }

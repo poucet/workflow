@@ -1,17 +1,16 @@
 # Ideas
 
-Lightweight inbox for ideas not yet in the roadmap.
+Lightweight capture of ideas across their full lifecycle.
 
-## Inbox
+| Status | # | Idea | Notes | Updated |
+|--------|---|------|-------|---------|
+| | | | | |
 
-| # | Idea | Notes | Added |
-|---|------|-------|-------|
-| | | | |
+## Status lifecycle
 
-## Triaged
-
-Ideas reviewed and assigned a disposition.
-
-| # | Idea | Disposition | Notes |
-|---|------|-------------|-------|
-| | | roadmap / later / wontdo | |
+- 💡 **idea** — fresh capture, not yet triaged
+- 🪵 **backlog** — parked for later consideration
+- 🎯 **ready** — approved, waiting for design
+- 🔄 **in progress** — actively in design or build
+- ✅ **done** — rolled into roadmap or shipped
+- 🗑️ **wontdo** — decided not to pursue

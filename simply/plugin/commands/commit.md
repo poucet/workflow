@@ -9,7 +9,7 @@ Review open changes and create meaningful atomic commits.
 
 ## Context
 
-Read `docs/simply.yaml` for: project, version, phase
+Read frontmatter from `docs/PROJECT.md` for: project, version, phase
 Phase path: `docs/{project}/{version}/phases/{phase}/`
 
 ## Steps
@@ -23,7 +23,12 @@ Phase path: `docs/{project}/{version}/phases/{phase}/`
 3. For each group: `jj commit` with clear message (imperative, ~50 chars)
 
 4. **Update journal** (if significant work):
-   - Add brief entry to JOURNAL.md noting what was done
-   - Include any decisions made, blockers hit, or things learned
+   - Append a brief entry to the current phase's JOURNAL.md noting what was done, decisions made, blockers hit, or things learned
 
-5. Report summary of commits created
+5. **Refresh architecture** (if structural change):
+   - If the commits touched 5+ files, added/removed top-level directories, introduced new components, or changed the component graph, offer to refresh the `## Architecture` section of `docs/PROJECT.md`
+   - Keep the refresh concise — bullets and short paragraphs only, this is auto-loaded into every session
+   - Update `architecture_updated` in the frontmatter to today's date
+   - Commit the PROJECT.md update separately
+
+6. Report summary of commits created
