@@ -34,17 +34,17 @@ Templates: `~/.simply/templates/`
    - Run `jj commit` with changed files
    - Show new phase status
 
-4. **If no arg**: Find next task
+4. **If no arg**: Find next task and start it immediately
    - Read TASKS.md for current phase
    - Check for in-progress tasks first
    - Find next `todo` task by priority (P0 > P1 > P2)
    - If no tasks remain: ask if ready to switch to next phase
-   - Present task details and ask if ready to start
+   - Treat `/simply:next` as a "go" command — do NOT ask "ready to start?". Mark the task in-progress and begin implementation immediately.
 
-5. **When starting a task**:
+5. **When starting a task** (happens automatically on `/simply:next`):
    - Update TASKS.md: change status from ⬜ to 🔄
    - `jj commit` with TASKS.md update
-   - Show task details and acceptance criteria
+   - Show task details and acceptance criteria, then start working on it right away
 
 6. **When finishing a task** (user says "done" or similar):
    - Verify acceptance criteria are met
