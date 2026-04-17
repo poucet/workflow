@@ -42,11 +42,14 @@ docs/
         ├── IDEAS.md         # Idea inbox (lifecycle-tracked)
         ├── DESIGN.md        # Design documents
         ├── ROADMAP.md       # Feature roadmap
-        └── phases/
-            └── {phase}/
-                ├── TASKS.md    # Phase tasks
-                └── JOURNAL.md  # Session notes + phase recaps
+        ├── TASKS.md         # Flat task backlog (all phases, Phase column)
+        └── journals/
+            ├── 01.md        # Phase 01 journal
+            ├── 02-auth.md   # Phases can have names, not just numbers
+            └── polish.md
 ```
+
+Phase is a label, not a container. Tasks live in one flat TASKS.md (Phase column + global `T{N}` IDs) so you get a single overview of all open work. Journals stay bounded per phase in `journals/{phase}.md`. Phase identifiers are freeform strings — number (`01`), name (`polish`), or mixed (`02-auth`).
 
 `docs/PROJECT.md` is auto-loaded into every session via a SessionStart hook. It carries the current workflow state in frontmatter (project / version / phase) plus the project's problem statement, current focus, and Architecture section — so Claude has intent + codebase bootstrap for free on every session, with no per-command scanning.
 

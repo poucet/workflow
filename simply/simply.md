@@ -38,11 +38,14 @@ docs/
         ├── IDEAS.md         # Idea inbox (lifecycle-tracked)
         ├── DESIGN.md        # Design documents
         ├── ROADMAP.md       # Feature roadmap
-        └── phases/
-            └── {phase}/
-                ├── TASKS.md    # Phase tasks
-                └── JOURNAL.md  # Session notes + phase recaps
+        ├── TASKS.md         # Flat task backlog — all phases, Phase column
+        └── journals/
+            ├── 01.md        # Phase 01 journal
+            ├── 02-auth.md   # Phases can have names, not just numbers
+            └── polish.md
 ```
+
+**Phase is a label, not a container.** Tasks live in one flat TASKS.md with a Phase column — so you get an overview of all open work at a glance. Journals stay bounded per phase (they're chronological) and live in a `journals/` subdir, one file per phase. Phase identifiers are freeform strings: numeric (`01`), named (`polish`), or mixed (`02-auth`). Prefix with numbers if you want sort order.
 
 `docs/PROJECT.md` is auto-loaded into every session via a SessionStart hook. It carries:
 - **Frontmatter**: project / version / phase — current workflow state

@@ -10,7 +10,8 @@ Show current workflow status. If not initialized, show help.
 ## Context
 
 Read frontmatter from `docs/PROJECT.md` for: project, version, phase
-Phase path: `docs/{project}/{version}/phases/{phase}/`
+Version path: `docs/{project}/{version}/`
+Journal path: `docs/{project}/{version}/journals/{phase}.md`
 
 ## Steps
 
@@ -33,7 +34,8 @@ Phase path: `docs/{project}/{version}/phases/{phase}/`
 
 3. **If initialized**, show status:
    - Project, version, phase
-   - Task counts: ⬜ todo / 🔄 in-progress / ✅ done
+   - Task counts for the current phase (filtered from TASKS.md): ⬜ todo / 🔄 in-progress / ✅ done
+   - Total task counts across all phases (for overview)
    - Idea counts by status: 💡 / 🪵 / 🎯 / 🔄 / ✅ / 🗑️
    - Designs in progress (draft/refined count)
    - Next suggested action

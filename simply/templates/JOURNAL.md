@@ -1,6 +1,6 @@
-# Phase {NN}: Journal
+# Phase {phase}: Journal
 
-Chronological stream of thoughts, changes, and observations.
+Chronological stream of thoughts, changes, and observations for phase `{phase}`.
 
 ---
 
